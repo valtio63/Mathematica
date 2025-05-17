@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Phase Space Visualization</title>
+  <style>
+    body { font-family: sans-serif; margin: 0; padding: 0; }
+    #guiContainer { position: absolute; top: 10px; right: 10px; z-index: 100; }
+    canvas { display: block; margin: 0 auto; background: #eee; }
+  </style>
+  <!-- Include p5.js and dat.GUI from CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.2/p5.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.7/dat.gui.min.js"></script>
+</head>
+<body>
+  <div id="guiContainer"></div>
+  <script>
+    // --- Physical constants ---
+    const electronMass = 0.510998; // MeV
+    const speedOfLight = 2.99792458e8; // m/s
+
+    // --- Helper functions ---
+    function gamma(T) {
+      return (T + electronMass) / electronMass;
+    }
+
+    function magneticRigidity(T) {
+      return (T * 1e6) / speedOfLight;
+    }
+
+    // Returns a 4D phase-space vector for a Møller electron.
+    // T0 and T1 are in MeV.
+    function mollerInitialConditions(T0, T1) {
+      let E0 = T0 + electronMass;
+      let E1 = T1 + electronMass;
+      let p0 = Math.sqrt(E0 * E0 - electronMass * electronMass);
+      let p1 = Math.sqrt(E1 * E1 - electronMass * electronMass);
+      let E2 = E0 + electronMass - E1;
+      let p2 = Math.sqrt(E2 * E2 - electronMass * electronMass);
+      let theta1 = Math.acos( (p0*p0 + p1*p1 - p2*p2) / (2*p0*p1) );
+      let phi = Math.random() * 2 * Math.PI;
+      return [
+        Math.random() * 0.002 - 0.001, 
+        theta1 * Math.cos(phi), 
+        Math.random() * 0.002 - 0.001, 
+        theta1 * Math.sin(phi)
+      ];
+    }
+
+    // Returns a 4x4 drift matrix for length Lc.
+    function driftMatrix(Lc) {
+      return [
+        [1, Lc, 0, 0],
+        [0, 1,  0, 0],
+        [0, 0,  1, Lc],
+        [0, 0,  0, 1]
+      ];
+    }
+
+    // Returns a 4x4 solenoid matrix given field Bs [T], solenoid length Ls [m] and kinetic energy T [MeV].
+    function solenoidMatrix(Bs, Ls, T) {
+      let k = Math.abs(Bs) / magneticRigidity(T);
+      let phi = k * Ls;  // rotation angle
+      let f = Math.sin(phi) / k;
+      let g = (1 - Math.cos(phi)) / k;
+      return [
+        [ Math.cos(phi), f,             Math.sin(phi),  g ],
+        [ -k * Math.sin(phi), Math.cos(phi), -k * g,      Math.sin(phi) ],
+        [ -Math.sin(phi), -g,            Math.cos(phi), f ],
+        [ k * g,         -Math.sin(phi), -k * Math.sin(phi), Math.cos(phi) ]
+      ];
+    }
+
+    // Returns a 4D phase-space vector for a Mott electron.
+    function mottInitialConditions() {
+      let x = Math.random() * 0.002 - 0.001;
+      let y = Math.random() * 0.002 - 0.001;
+      let theta = Math.random() * 0.001;
+      let phi = Math.random() * 2 * Math.PI;
+      return [x, theta * Math.cos(phi), y, theta * Math.sin(phi)];
+    }
+
+    // Multiply a 4x4 matrix by a 4D vector.
+    function multiplyMatrixVector(m, v) {
+      let result = [];
+      for (let i = 0; i < 4; i++) {
+        let sum = 0;
+        for (let j = 0; j < 4; j++) {
+          sum += m[i][j] * v[j];
+        }
+        result.push(sum);
+      }
+      return result;
+    }
+
+    // Multiply two 4x4 matrices.
+    function multiplyMatrices(a, b) {
+      let result = [];
+      for (let i = 0; i < 4; i++) {
+        result[i] = [];
+        for (let j = 0; j < 4; j++) {
+          let sum = 0;
+          for (let k = 0; k < 4; k++){
+            sum += a[i][k] * b[k][j];
+          }
+          result[i][j] = sum;
+        }
+      }
+      return result;
+    }
+
+    // --- Global parameters & GUI ---
+    let params = {
+      deltaT1: 10,      // MeV range for moller energies (around 77.5 MeV)
+      zVal: 1,          // scaling factor for solenoid length
+      Bs: 8.0,          // Solenoid field in Tesla
+      Lc1: 0.75,        // Drift length in meters
+      PlotRangeX: 0.1   // Half-width in x [m] for plotting
+    };
+
+    let gui = new dat.GUI({ autoPlace: false });
+    document.getElementById("guiContainer").appendChild(gui.domElement);
+    gui.add(params, 'deltaT1', 0.1, 77, 0.1).name("ΔT1");
+    gui.add(params, 'zVal', 0, 1, 0.01).name("z Scale");
+    gui.add(params, 'Bs', 0.01, 9, 0.1).name("Bₛ [T]");
+    gui.add(params, 'Lc1', 0, 2, 0.01).name("Drift L [m]");
+    gui.add(params, 'PlotRangeX', 0.01, 0.2, 0.005).name("Plot X-range");
+
+    // --- p5.js sketch ---
+    let mollerPoints = [];
+    let mottPoints = [];
+    let xData = [];
+
+    function setup() {
+      // Create a canvas that will later be resized to the plot range.
+      createCanvas(600, 600);
+      noLoop();
+    }
+
+    function draw() {
+      background(240);
+      // --- Compute Møller points ---
+      // Define energy range: centered at 77.5 MeV with ±deltaT1 span.
+      let centerT = 155.0 / 2;
+      let T0 = centerT - params.deltaT1;
+      let T1 = centerT + params.deltaT1;
+      let steps = 2450; // roughly as in Mathematica
+      xData = [];
+      mollerPoints = [];
+      for (let i = 0; i <= steps; i++) {
+        let T = T0 + (T1 - T0) * (i / steps);
+        xData.push(T);
+        // Compute combined matrix: driftMatrix * solenoidMatrix
+        let md = driftMatrix(params.Lc1);
+        let ms = solenoidMatrix(params.Bs, 0.40607 * params.zVal, T);
+        let combined = multiplyMatrices(md, ms);
+        // Compute transformation of moller initial conditions (with T0 fixed at 155 MeV on left side)
+        let vec = multiplyMatrixVector(combined, mollerInitialConditions(155.0, T));
+        // We take the x-coordinate (index 0) and y-coordinate (index 2)
+        mollerPoints.push({ x: vec[0], y: vec[2] });
+      }
+
+      // --- Compute Mott points ---
+      mottPoints = [];
+      for (let i = 0; i < 49; i++) {
+        let md = driftMatrix(params.Lc1);
+        let ms = solenoidMatrix(params.Bs, 0.40607 * 1, 155.0);
+        let combined = multiplyMatrices(md, ms);
+        let vec = multiplyMatrixVector(combined, mottInitialConditions());
+        mottPoints.push({ x: vec[0], y: vec[2] });
+      }
+
+      // --- Determine plot scale ---
+      // We map x ∈ [ -params.PlotRangeX, params.PlotRangeX ] and y from -0.1 to 0.1 (in meters)
+      // For simplicity, we use these as world coordinates and map them to canvas pixels.
+      let margin = 40;
+      let plotWidth = width - 2 * margin;
+      let plotHeight = height - 2 * margin;
+
+      // Draw frame and axis labels
+      stroke(0);
+      noFill();
+      rect(margin, margin, plotWidth, plotHeight);
+      textAlign(CENTER);
+      fill(0);
+      text("x [m]", width / 2, height - 10);
+      push();
+      translate(10, height / 2);
+      rotate(-HALF_PI);
+      text("y [m]", 0, 0);
+      pop();
+      // Plot label with current zVal
+      noStroke();
+      fill(0);
+      text("Phase Space at z = " + nf(params.zVal, 1, 2), width / 2, margin - 10);
+
+      // --- Draw Møller points ---
+      // Create a custom color gradient from Blue (low) → Black (mid) → Red (high)
+      let blueCol = color(0, 0, 255);
+      let blackCol = color(0, 0, 0);
+      let redCol = color(255, 0, 0);
+      // Normalize energy to [0,1]
+      for (let i = 0; i < mollerPoints.length; i++) {
+        let normVal = map(xData[i], T0, T1, 0, 1);
+        let col;
+        if (normVal < 0.5) {
+          col = lerpColor(blueCol, blackCol, normVal * 2);
+        } else {
+          col = lerpColor(blackCol, redCol, (normVal - 0.5) * 2);
+        }
+        stroke(col);
+        strokeWeight(4);
+        let px = map(mollerPoints[i].x, -params.PlotRangeX, params.PlotRangeX, margin, width - margin);
+        let py = map(mollerPoints[i].y, -0.1, 0.1, height - margin, margin);
+        point(px, py);
+      }
+
+      // --- Draw Mott points as violet circles ---
+      strokeWeight(1);
+      stroke(148, 0, 211);
+      noFill();
+      for (let i = 0; i < mottPoints.length; i++) {
+        let px = map(mottPoints[i].x, -params.PlotRangeX, params.PlotRangeX, margin, width - margin);
+        let py = map(mottPoints[i].y, -0.1, 0.1, height - margin, margin);
+        ellipse(px, py, 8, 8);
+      }
+    }
+
+    // Redraw whenever any parameter changes.
+    for (let controller of gui.__controllers) {
+      controller.onChange(() => redraw());
+    }
+  </script>
+</body>
+</html>
