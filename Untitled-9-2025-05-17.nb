@@ -1,0 +1,654 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Wolfram 14.1' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       154,          7]
+NotebookDataLength[     25438,        644]
+NotebookOptionsPosition[     24950,        627]
+NotebookOutlinePosition[     25346,        643]
+CellTagsIndexPosition[     25303,        640]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+
+Cell[CellGroupData[{
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"(*", 
+   RowBox[{
+    RowBox[{"2025", "-", "05", "-", "15"}], ",", 
+    RowBox[{"checked", " ", "OK"}], ",", 
+    RowBox[{
+    "Define", " ", "the", " ", "Mott", " ", "initial", " ", "conditions", " ",
+      "with", " ", "random", " ", "transverse", " ", "position", " ", "and", 
+     " ", "angles"}]}], "*)"}], 
+  RowBox[{
+   RowBox[{
+    RowBox[{"electronMass", "=", "0.510998"}], ";"}], "\n", 
+   RowBox[{
+    RowBox[{"speedOfLight", "=", "2.99792458*^8"}], ";"}], "\n", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"gamma", "[", "T_", "]"}], ":=", 
+     RowBox[{
+      RowBox[{"(", 
+       RowBox[{"T", "+", "electronMass"}], ")"}], "/", "electronMass"}]}], 
+    ";"}], "\n", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"magneticRigidity", "[", "T_", "]"}], ":=", 
+     RowBox[{
+      RowBox[{"(", 
+       RowBox[{"T", "*", 
+        RowBox[{"10", "^", "6"}]}], ")"}], "/", "speedOfLight"}]}], ";"}], 
+   "\n", "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"mollerInitialConditions", "[", 
+      RowBox[{"T0_", ",", "T1_"}], "]"}], ":=", 
+     RowBox[{"Module", "[", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{
+        "E0", ",", "E1", ",", "p0", ",", "p1", ",", "E2", ",", "p2", ",", 
+         "theta1", ",", "phi"}], "}"}], ",", 
+       RowBox[{
+        RowBox[{"E0", "=", 
+         RowBox[{"T0", "+", "electronMass"}]}], ";", "\[IndentingNewLine]", 
+        RowBox[{"E1", "=", 
+         RowBox[{"T1", "+", "electronMass"}]}], ";", "\[IndentingNewLine]", 
+        RowBox[{"p0", "=", 
+         RowBox[{"Sqrt", "[", 
+          RowBox[{
+           RowBox[{"E0", "^", "2"}], "-", 
+           RowBox[{"electronMass", "^", "2"}]}], "]"}]}], ";", 
+        "\[IndentingNewLine]", 
+        RowBox[{"p1", "=", 
+         RowBox[{"Sqrt", "[", 
+          RowBox[{
+           RowBox[{"E1", "^", "2"}], "-", 
+           RowBox[{"electronMass", "^", "2"}]}], "]"}]}], ";", 
+        "\[IndentingNewLine]", 
+        RowBox[{"E2", "=", 
+         RowBox[{"E0", "+", "electronMass", "-", "E1"}]}], ";", 
+        "\[IndentingNewLine]", 
+        RowBox[{"p2", "=", 
+         RowBox[{"Sqrt", "[", 
+          RowBox[{
+           RowBox[{"E2", "^", "2"}], "-", 
+           RowBox[{"electronMass", "^", "2"}]}], "]"}]}], ";", 
+        "\[IndentingNewLine]", 
+        RowBox[{"theta1", "=", 
+         RowBox[{"ArcCos", "[", 
+          RowBox[{
+           RowBox[{"(", 
+            RowBox[{
+             RowBox[{"p0", "^", "2"}], "+", 
+             RowBox[{"p1", "^", "2"}], "-", 
+             RowBox[{"p2", "^", "2"}]}], ")"}], "/", 
+           RowBox[{"(", 
+            RowBox[{"2", "*", "p0", "*", "p1"}], ")"}]}], "]"}]}], ";", 
+        "\[IndentingNewLine]", 
+        RowBox[{"phi", "=", 
+         RowBox[{"RandomReal", "[", 
+          RowBox[{"{", 
+           RowBox[{"0", ",", 
+            RowBox[{"2", " ", "\[Pi]"}]}], "}"}], "]"}]}], ";", 
+        "\[IndentingNewLine]", 
+        RowBox[{"{", 
+         RowBox[{
+          RowBox[{"RandomReal", "[", 
+           RowBox[{"{", 
+            RowBox[{
+             RowBox[{"-", "0.001"}], ",", 
+             RowBox[{"+", "0.001"}]}], "}"}], "]"}], ",", 
+          RowBox[{"theta1", " ", 
+           RowBox[{"Cos", "[", "phi", "]"}]}], ",", 
+          RowBox[{"RandomReal", "[", 
+           RowBox[{"{", 
+            RowBox[{
+             RowBox[{"-", "0.001"}], ",", 
+             RowBox[{"+", "0.001"}]}], "}"}], "]"}], ",", 
+          RowBox[{"theta1", " ", 
+           RowBox[{"Sin", "[", "phi", "]"}]}]}], "}"}]}]}], "]"}]}], ";"}], 
+   "\[IndentingNewLine]", "\n", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"driftMatrix", "[", "Lc_", "]"}], ":=", 
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{"1", ",", "Lc", ",", "0", ",", "0"}], "}"}], ",", 
+       RowBox[{"{", 
+        RowBox[{"0", ",", "1", ",", "0", ",", "0"}], "}"}], ",", 
+       RowBox[{"{", 
+        RowBox[{"0", ",", "0", ",", "1", ",", "Lc"}], "}"}], ",", 
+       RowBox[{"{", 
+        RowBox[{"0", ",", "0", ",", "0", ",", "1"}], "}"}]}], "}"}]}], ";"}], 
+   "\[IndentingNewLine]", "\n", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"solenoidMatrix", "[", 
+      RowBox[{"Bs_", ",", "Ls_", ",", "T_"}], "]"}], ":=", 
+     RowBox[{"Module", "[", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{"k", "=", 
+          RowBox[{
+           RowBox[{"Abs", "[", "Bs", "]"}], "/", 
+           RowBox[{"magneticRigidity", "[", "T", "]"}]}]}], ",", "phi", ",", 
+         "f", ",", "g"}], "}"}], ",", 
+       RowBox[{
+        RowBox[{"phi", "=", 
+         RowBox[{"k", "*", "Ls"}]}], ";", 
+        RowBox[{"(*", 
+         RowBox[{"Rotation", " ", "angle"}], "*)"}], 
+        RowBox[{"f", "=", 
+         RowBox[{
+          RowBox[{"Sin", "[", "phi", "]"}], "/", "k"}]}], ";", 
+        "\[IndentingNewLine]", 
+        RowBox[{"g", "=", 
+         RowBox[{
+          RowBox[{"(", 
+           RowBox[{"1", "-", 
+            RowBox[{"Cos", "[", "phi", "]"}]}], ")"}], "/", "k"}]}], ";", 
+        "\[IndentingNewLine]", 
+        RowBox[{"{", 
+         RowBox[{
+          RowBox[{"{", 
+           RowBox[{
+            RowBox[{"Cos", "[", "phi", "]"}], ",", "f", ",", 
+            RowBox[{"Sin", "[", "phi", "]"}], ",", "g"}], "}"}], ",", 
+          RowBox[{"{", 
+           RowBox[{
+            RowBox[{
+             RowBox[{"-", "k"}], "*", 
+             RowBox[{"Sin", "[", "phi", "]"}]}], ",", 
+            RowBox[{"Cos", "[", "phi", "]"}], ",", 
+            RowBox[{
+             RowBox[{"-", "k"}], "*", "g"}], ",", 
+            RowBox[{"Sin", "[", "phi", "]"}]}], "}"}], ",", 
+          RowBox[{"{", 
+           RowBox[{
+            RowBox[{"-", 
+             RowBox[{"Sin", "[", "phi", "]"}]}], ",", 
+            RowBox[{"-", "g"}], ",", 
+            RowBox[{"Cos", "[", "phi", "]"}], ",", "f"}], "}"}], ",", 
+          RowBox[{"{", 
+           RowBox[{
+            RowBox[{"k", "*", "g"}], ",", 
+            RowBox[{"-", 
+             RowBox[{"Sin", "[", "phi", "]"}]}], ",", 
+            RowBox[{
+             RowBox[{"-", "k"}], "*", 
+             RowBox[{"Sin", "[", "phi", "]"}]}], ",", 
+            RowBox[{"Cos", "[", "phi", "]"}]}], "}"}]}], "}"}]}]}], "]"}]}], 
+    ";"}], "\[IndentingNewLine]", "\n", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"mottInitialConditions", "[", "]"}], ":=", 
+     RowBox[{"Module", "[", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{"x", ",", "y", ",", "theta", ",", "phi"}], "}"}], ",", 
+       RowBox[{
+        RowBox[{"x", "=", 
+         RowBox[{"RandomReal", "[", 
+          RowBox[{"{", 
+           RowBox[{
+            RowBox[{"-", "0.001"}], ",", "0.001"}], "}"}], "]"}]}], ";", 
+        RowBox[{"(*", 
+         RowBox[{"x", " ", "random", " ", 
+          RowBox[{"in", "[", 
+           RowBox[{
+            RowBox[{"-", "0.001"}], ",", "0.001"}], "]"}], " ", "m"}], "*)"}], 
+        RowBox[{"y", "=", 
+         RowBox[{"RandomReal", "[", 
+          RowBox[{"{", 
+           RowBox[{
+            RowBox[{"-", "0.001"}], ",", "0.001"}], "}"}], "]"}]}], ";", 
+        RowBox[{"(*", 
+         RowBox[{"y", " ", "random", " ", 
+          RowBox[{"in", "[", 
+           RowBox[{
+            RowBox[{"-", "0.001"}], ",", "0.001"}], "]"}], " ", "m"}], "*)"}], 
+        RowBox[{"theta", "=", 
+         RowBox[{"RandomReal", "[", 
+          RowBox[{"{", 
+           RowBox[{"0", ",", "0.001"}], "}"}], "]"}]}], ";", 
+        RowBox[{"(*", 
+         RowBox[{"theta", " ", "in", " ", "radians"}], "*)"}], 
+        RowBox[{"phi", "=", 
+         RowBox[{"RandomReal", "[", 
+          RowBox[{"{", 
+           RowBox[{"0", ",", 
+            RowBox[{"2", " ", "\[Pi]"}]}], "}"}], "]"}]}], ";", 
+        RowBox[{"(*", 
+         RowBox[{"phi", " ", "angle", " ", 
+          RowBox[{"in", "[", 
+           RowBox[{"0", ",", 
+            RowBox[{"2", "\[Pi]"}]}], "]"}]}], "*)"}], 
+        RowBox[{"{", 
+         RowBox[{"x", ",", 
+          RowBox[{"theta", " ", 
+           RowBox[{"Cos", "[", "phi", "]"}]}], ",", "y", ",", 
+          RowBox[{"theta", " ", 
+           RowBox[{"Sin", "[", "phi", "]"}]}]}], "}"}]}]}], " ", 
+      RowBox[{"(*", 
+       RowBox[{
+       "Return", " ", "4", "D", " ", "phase", " ", "space", " ", "vector"}], 
+       "*)"}], "]"}]}], ";"}], "\[IndentingNewLine]", "\n", 
+   RowBox[{"Manipulate", "[", 
+    RowBox[{
+     RowBox[{"Module", "[", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{
+        "xData", ",", "mollerPoints", ",", "colors", ",", "colorFunc", ",", 
+         "mottPoints"}], "}"}], ",", 
+       RowBox[{"(*", 
+        RowBox[{
+         RowBox[{
+         "Compute", " ", "M\[OSlash]ller", " ", "energies", " ", "around", 
+          " ", "155", " ", "MeV"}], "\[PlusMinus]", "deltaT1"}], "*)"}], 
+       RowBox[{
+        RowBox[{"xData", "=", 
+         RowBox[{"Range", "[", 
+          RowBox[{
+           RowBox[{
+            RowBox[{"155.0", "/", "2"}], "-", "deltaT1"}], ",", 
+           RowBox[{
+            RowBox[{"155.0", "/", "2"}], "+", "deltaT1"}], ",", 
+           RowBox[{
+            RowBox[{"(", 
+             RowBox[{"2", " ", "deltaT1"}], ")"}], "/", "2449"}]}], "]"}]}], 
+        ";", "\[IndentingNewLine]", 
+        RowBox[{"(*", 
+         RowBox[{
+          RowBox[{
+          "Define", " ", "custom", " ", "color", " ", "gradient", " ", 
+           "Blue"}], "-", "Black", "-", "Red"}], "*)"}], 
+        RowBox[{"colorFunc", "=", 
+         RowBox[{
+          RowBox[{"Blend", "[", 
+           RowBox[{
+            RowBox[{"{", 
+             RowBox[{"Blue", ",", "Black", ",", "Red"}], "}"}], ",", "#"}], 
+           "]"}], "&"}]}], ";", "\[IndentingNewLine]", 
+        RowBox[{"(*", 
+         RowBox[{
+         "Map", " ", "energies", " ", "to", " ", "color", " ", "scale"}], 
+         "*)"}], 
+        RowBox[{"colors", "=", 
+         RowBox[{"colorFunc", "/@", 
+          RowBox[{"Rescale", "[", 
+           RowBox[{"xData", ",", 
+            RowBox[{"{", 
+             RowBox[{
+              RowBox[{"Min", "[", "xData", "]"}], ",", 
+              RowBox[{"Max", "[", "xData", "]"}]}], "}"}]}], "]"}]}]}], ";", 
+        "\[IndentingNewLine]", 
+        RowBox[{"(*", 
+         RowBox[{
+          RowBox[{
+           RowBox[{"--", 
+            RowBox[{"-", "Transform"}]}], " ", "M\[OSlash]ller", " ", 
+           "particles", " ", "for", " ", "current", " ", 
+           RowBox[{"zVal", "--"}]}], "-"}], "*)"}], 
+        RowBox[{"mollerPoints", "=", 
+         RowBox[{"Table", "[", 
+          RowBox[{
+           RowBox[{"Module", "[", 
+            RowBox[{
+             RowBox[{"{", "vec", "}"}], ",", 
+             RowBox[{
+              RowBox[{"vec", "=", 
+               RowBox[{
+                RowBox[{"Dot", "[", 
+                 RowBox[{
+                  RowBox[{"driftMatrix", "[", "Lc1", "]"}], ",", 
+                  RowBox[{"solenoidMatrix", "[", 
+                   RowBox[{"Bs", ",", 
+                    RowBox[{"0.40607", "*", "zVal"}], ",", "T"}], "]"}]}], 
+                 "]"}], ".", 
+                RowBox[{"mollerInitialConditions", "[", 
+                 RowBox[{"155.0", ",", "T"}], "]"}]}]}], ";", 
+              "\[IndentingNewLine]", 
+              RowBox[{"{", 
+               RowBox[{
+                RowBox[{"vec", "[", 
+                 RowBox[{"[", "1", "]"}], "]"}], ",", 
+                RowBox[{"vec", "[", 
+                 RowBox[{"[", "3", "]"}], "]"}]}], "}"}]}]}], "]"}], ",", 
+           RowBox[{"{", 
+            RowBox[{"T", ",", "xData"}], "}"}]}], "]"}]}], ";", 
+        "\[IndentingNewLine]", 
+        RowBox[{"(*", 
+         RowBox[{
+          RowBox[{
+           RowBox[{"--", 
+            RowBox[{"-", "Add"}]}], " ", "49", " ", "Mott", " ", "electrons", 
+           " ", "at", " ", "fixed", " ", "T"}], "=", 
+          RowBox[{
+           RowBox[{"155.0", " ", "and", " ", "zVal"}], "=", 
+           RowBox[{
+            RowBox[{"1", "--"}], "-"}]}]}], "*)"}], 
+        RowBox[{"(*", 
+         RowBox[{
+          RowBox[{
+          "They", " ", "are", " ", "all", " ", "plotted", " ", "in", " ", 
+           "Violet"}], ",", 
+          RowBox[{"at", " ", "fixed", " ", "solenoid", " ", "field"}]}], 
+         "*)"}], 
+        RowBox[{"mottPoints", "=", 
+         RowBox[{"Table", "[", 
+          RowBox[{
+           RowBox[{"Module", "[", 
+            RowBox[{
+             RowBox[{"{", "vec", "}"}], ",", 
+             RowBox[{
+              RowBox[{"vec", "=", 
+               RowBox[{
+                RowBox[{"Dot", "[", 
+                 RowBox[{
+                  RowBox[{"driftMatrix", "[", "Lc1", "]"}], ",", 
+                  RowBox[{"solenoidMatrix", "[", 
+                   RowBox[{"Bs", ",", 
+                    RowBox[{"0.40607", "*", "1"}], ",", "155.0"}], "]"}]}], 
+                 "]"}], ".", 
+                RowBox[{"mottInitialConditions", "[", "]"}]}]}], ";", 
+              "\[IndentingNewLine]", 
+              RowBox[{"{", 
+               RowBox[{
+                RowBox[{"vec", "[", 
+                 RowBox[{"[", "1", "]"}], "]"}], ",", 
+                RowBox[{"vec", "[", 
+                 RowBox[{"[", "3", "]"}], "]"}]}], "}"}]}]}], "]"}], ",", 
+           RowBox[{"{", "49", "}"}]}], "]"}]}], ";", "\[IndentingNewLine]", 
+        RowBox[{"(*", 
+         RowBox[{"Plot", " ", "both", " ", "M\[OSlash]ller", " ", 
+          RowBox[{"(", 
+           RowBox[{"color", "-", "mapped"}], ")"}], " ", "and", " ", "Mott", 
+          " ", 
+          RowBox[{"(", 
+           RowBox[{"violet", " ", "circles"}], ")"}], " ", "particles"}], 
+         "*)"}], 
+        RowBox[{"Graphics", "[", 
+         RowBox[{
+          RowBox[{"Join", "[", 
+           RowBox[{
+            RowBox[{"Table", "[", 
+             RowBox[{
+              RowBox[{"{", 
+               RowBox[{
+                RowBox[{"colors", "[", 
+                 RowBox[{"[", "i", "]"}], "]"}], ",", 
+                RowBox[{"PointSize", "[", "Medium", "]"}], ",", 
+                RowBox[{"Point", "[", 
+                 RowBox[{"mollerPoints", "[", 
+                  RowBox[{"[", "i", "]"}], "]"}], "]"}]}], "}"}], ",", 
+              RowBox[{"{", 
+               RowBox[{"i", ",", 
+                RowBox[{"Length", "[", "mollerPoints", "]"}]}], "}"}]}], 
+             "]"}], ",", 
+            RowBox[{"Table", "[", 
+             RowBox[{
+              RowBox[{"{", 
+               RowBox[{
+                RowBox[{"Darker", "[", "Blue", "]"}], ",", 
+                RowBox[{"Circle", "[", 
+                 RowBox[{
+                  RowBox[{"mottPoints", "[", 
+                   RowBox[{"[", "i", "]"}], "]"}], ",", "0.002"}], "]"}]}], 
+               "}"}], ",", 
+              RowBox[{"{", 
+               RowBox[{"i", ",", 
+                RowBox[{"Length", "[", "mottPoints", "]"}]}], "}"}]}], 
+             "]"}]}], "]"}], ",", 
+          RowBox[{"Frame", "->", "True"}], ",", 
+          RowBox[{"FrameLabel", "->", 
+           RowBox[{"{", 
+            RowBox[{"\"\<x [m]\>\"", ",", "\"\<y [m]\>\""}], "}"}]}], ",", 
+          RowBox[{"PlotLabel", "->", 
+           RowBox[{"Style", "[", 
+            RowBox[{
+             RowBox[{"Row", "[", 
+              RowBox[{"{", 
+               RowBox[{"\"\<Phase Space at z = \>\"", ",", 
+                RowBox[{"NumberForm", "[", 
+                 RowBox[{"zVal", ",", 
+                  RowBox[{"{", 
+                   RowBox[{"2", ",", "2"}], "}"}]}], "]"}]}], "}"}], "]"}], 
+             ",", "Italic", ",", "12"}], "]"}]}], ",", 
+          RowBox[{"PlotRange", "->", 
+           RowBox[{"{", 
+            RowBox[{
+             RowBox[{"{", 
+              RowBox[{
+               RowBox[{"-", "PlotRangeX"}], ",", "PlotRangeX"}], "}"}], ",", 
+             RowBox[{"{", 
+              RowBox[{
+               RowBox[{"-", "0.1"}], ",", "0.1"}], "}"}]}], "}"}]}], ",", 
+          RowBox[{"ImageSize", "->", "Medium"}], ",", 
+          RowBox[{"AspectRatio", "->", "1"}], ",", 
+          RowBox[{"GridLines", "->", "Automatic"}]}], "]"}]}]}], "]"}], ",", 
+     "\[IndentingNewLine]", 
+     RowBox[{"(*", 
+      RowBox[{
+      "Controls", " ", "panel", " ", "on", " ", "the", " ", "right", " ", 
+       RowBox[{"(", 
+        RowBox[{"only", " ", "used", " ", "controls", " ", "kept"}], ")"}]}], 
+      "*)"}], "\[IndentingNewLine]", 
+     RowBox[{"Column", "[", 
+      RowBox[{"{", "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{"Control", "[", 
+         RowBox[{"{", 
+          RowBox[{"deltaT1", ",", 
+           RowBox[{"{", 
+            RowBox[{
+            "0.1", ",", "2.5", ",", "5.0", ",", "15.0", ",", "20.0", ",", 
+             "25.0", ",", "77.0"}], "}"}]}], "}"}], "]"}], ",", 
+        "\[IndentingNewLine]", 
+        RowBox[{"Control", "[", 
+         RowBox[{"{", 
+          RowBox[{
+           RowBox[{"{", 
+            RowBox[{"zVal", ",", 
+             RowBox[{"1.", "/", "16"}], ",", "\"\<Solenoid Scaling \>\""}], 
+            "}"}], ",", "0", ",", "1", ",", 
+           RowBox[{"1.", "/", "16"}], ",", 
+           RowBox[{"Appearance", "->", "\"\<Labeled\>\""}]}], "}"}], "]"}], 
+        ",", "\[IndentingNewLine]", 
+        RowBox[{"Control", "[", 
+         RowBox[{"{", 
+          RowBox[{
+           RowBox[{"{", 
+            RowBox[{"Bs", ",", "8.0", ",", "\"\<Solenoid Field [T]\>\""}], 
+            "}"}], ",", "0.01", ",", "9", ",", "0.1", ",", 
+           RowBox[{"Appearance", "->", "\"\<Open\>\""}]}], "}"}], "]"}], ",", 
+        "\[IndentingNewLine]", 
+        RowBox[{"Control", "[", 
+         RowBox[{"{", 
+          RowBox[{
+           RowBox[{"{", 
+            RowBox[{"Lc1", ",", "0.75", ",", "\"\<Drift 1 [m]\>\""}], "}"}], 
+           ",", "0", ",", "2", ",", "0.01", ",", 
+           RowBox[{"Appearance", "->", "\"\<Open\>\""}]}], "}"}], "]"}], ",", 
+        "\[IndentingNewLine]", 
+        RowBox[{"Control", "[", 
+         RowBox[{"{", 
+          RowBox[{"PlotRangeX", ",", 
+           RowBox[{"{", 
+            RowBox[{"0.01", ",", "0.1"}], "}"}]}], "}"}], "]"}]}], "}"}], 
+      "]"}], ",", "\[IndentingNewLine]", 
+     RowBox[{"ControlPlacement", "->", "Right"}]}], "]"}], "\n"}]}]], "Input",
+ CellChangeTimes->{{3.9563113357241783`*^9, 3.9563113357251797`*^9}, {
+   3.9563832996860027`*^9, 3.9563833453980904`*^9}, 3.956383600538433*^9, {
+   3.956383834978245*^9, 3.9563838428936863`*^9}, {3.9563839037727356`*^9, 
+   3.9563839362803574`*^9}, {3.9563841000890007`*^9, 3.956384121244686*^9}, 
+   3.9563841646814213`*^9, {3.956384353796051*^9, 3.9563843689477386`*^9}, 
+   3.956384431461218*^9},
+ Background->RGBColor[0.9, 1, 1],
+ CellLabel->"In[1]:=",ExpressionUUID->"4e54f34c-49b7-c246-aaab-f7adca226f82"],
+
+Cell[BoxData[
+ TagBox[
+  StyleBox[
+   DynamicModuleBox[{$CellContext`Bs$$ = 8., $CellContext`deltaT1$$ = 
+    0.1, $CellContext`Lc1$$ = 0.75, $CellContext`PlotRangeX$$ = 
+    0.1, $CellContext`zVal$$ = 0.0625, Typeset`show$$ = True, 
+    Typeset`bookmarkList$$ = {}, Typeset`bookmarkMode$$ = "Menu", 
+    Typeset`animator$$, Typeset`animvar$$ = 1, Typeset`name$$ = 
+    "\"untitled\"", Typeset`specs$$ = {{
+      Hold[$CellContext`deltaT1$$], {0.1, 2.5, 5., 15., 20., 25., 77.}, 
+      ControlType -> PopupMenu}, {{
+       Hold[$CellContext`zVal$$], 0.0625, "Solenoid Scaling "}, 0, 1, 0.0625, 
+      ControlType -> Manipulator}, {{
+       Hold[$CellContext`Bs$$], 8., "Solenoid Field [T]"}, 0.01, 9, 0.1, 
+      ControlType -> Manipulator}, {{
+       Hold[$CellContext`Lc1$$], 0.75, "Drift 1 [m]"}, 0, 2, 0.01, 
+      ControlType -> Manipulator}, {
+      Hold[$CellContext`PlotRangeX$$], {0.01, 0.1}, ControlType -> 
+      SetterBar}, {
+      Hold[
+       Column[{
+         Manipulate`Place[1], 
+         Manipulate`Place[2], 
+         Manipulate`Place[3], 
+         Manipulate`Place[4], 
+         Manipulate`Place[5]}]], Manipulate`Dump`ThisIsNotAControl, 
+      ControlType -> None}}, Typeset`size$$ = {
+    360., {174.46758476560933`, 180.1995181911625}}, Typeset`update$$ = 0, 
+    Typeset`initDone$$, Typeset`skipInitDone$$ = True, 
+    Typeset`keyframeActionsQ$$ = False, Typeset`keyframeList$$ = {}}, 
+    DynamicBox[Manipulate`ManipulateBoxes[
+     2, StandardForm, 
+      "Variables" :> {$CellContext`Bs$$ = 8., $CellContext`deltaT1$$ = 
+        0.1, $CellContext`Lc1$$ = 0.75, $CellContext`PlotRangeX$$ = 
+        0.01, $CellContext`zVal$$ = 0.0625}, "ControllerVariables" :> {}, 
+      "OtherVariables" :> {
+       Typeset`show$$, Typeset`bookmarkList$$, Typeset`bookmarkMode$$, 
+        Typeset`animator$$, Typeset`animvar$$, Typeset`name$$, 
+        Typeset`specs$$, Typeset`size$$, Typeset`update$$, Typeset`initDone$$,
+         Typeset`skipInitDone$$, Typeset`keyframeActionsQ$$, 
+        Typeset`keyframeList$$}, "Body" :> 
+      Module[{$CellContext`xData$, $CellContext`mollerPoints$, \
+$CellContext`colors$, $CellContext`colorFunc$, $CellContext`mottPoints$}, \
+$CellContext`xData$ = 
+         Range[155./2 - $CellContext`deltaT1$$, 
+           155./2 + $CellContext`deltaT1$$, (2 $CellContext`deltaT1$$)/
+           2449]; $CellContext`colorFunc$ = 
+         Blend[{Blue, Black, Red}, #]& ; $CellContext`colors$ = 
+         Map[$CellContext`colorFunc$, 
+           Rescale[$CellContext`xData$, {
+             Min[$CellContext`xData$], 
+             Max[$CellContext`xData$]}]]; $CellContext`mollerPoints$ = Table[
+           Module[{$CellContext`vec$}, $CellContext`vec$ = Dot[
+               Dot[
+                $CellContext`driftMatrix[$CellContext`Lc1$$], 
+                $CellContext`solenoidMatrix[$CellContext`Bs$$, 
+                 0.40607 $CellContext`zVal$$, $CellContext`T]], 
+               $CellContext`mollerInitialConditions[155., $CellContext`T]]; {
+              Part[$CellContext`vec$, 1], 
+              
+              Part[$CellContext`vec$, 
+               3]}], {$CellContext`T, $CellContext`xData$}]; \
+$CellContext`mottPoints$ = Table[
+           Module[{$CellContext`vec$}, $CellContext`vec$ = Dot[
+               Dot[
+                $CellContext`driftMatrix[$CellContext`Lc1$$], 
+                $CellContext`solenoidMatrix[$CellContext`Bs$$, 0.40607 1, 
+                 155.]], 
+               $CellContext`mottInitialConditions[]]; {
+              Part[$CellContext`vec$, 1], 
+              Part[$CellContext`vec$, 3]}], {49}]; Graphics[
+          Join[
+           Table[{
+             Part[$CellContext`colors$, $CellContext`i], 
+             PointSize[Medium], 
+             Point[
+              
+              Part[$CellContext`mollerPoints$, $CellContext`i]]}, \
+{$CellContext`i, 
+             Length[$CellContext`mollerPoints$]}], 
+           Table[{
+             Darker[Blue], 
+             Circle[
+              Part[$CellContext`mottPoints$, $CellContext`i], 
+              0.002]}, {$CellContext`i, 
+             Length[$CellContext`mottPoints$]}]], Frame -> True, 
+          FrameLabel -> {"x [m]", "y [m]"}, PlotLabel -> Style[
+            Row[{"Phase Space at z = ", 
+              NumberForm[$CellContext`zVal$$, {2, 2}]}], Italic, 12], 
+          PlotRange -> {{-$CellContext`PlotRangeX$$, \
+$CellContext`PlotRangeX$$}, {-0.1, 0.1}}, ImageSize -> Medium, AspectRatio -> 
+          1, GridLines -> Automatic]], 
+      "Specifications" :> {{$CellContext`deltaT1$$, {0.1, 2.5, 5., 15., 20., 
+         25., 77.}, ControlPlacement -> 
+         1}, {{$CellContext`zVal$$, 0.0625, "Solenoid Scaling "}, 0, 1, 
+         0.0625, Appearance -> "Labeled", ControlPlacement -> 
+         2}, {{$CellContext`Bs$$, 8., "Solenoid Field [T]"}, 0.01, 9, 0.1, 
+         Appearance -> "Open", ControlPlacement -> 
+         3}, {{$CellContext`Lc1$$, 0.75, "Drift 1 [m]"}, 0, 2, 0.01, 
+         Appearance -> "Open", ControlPlacement -> 
+         4}, {$CellContext`PlotRangeX$$, {0.01, 0.1}, ControlPlacement -> 5}, 
+        Column[{
+          Manipulate`Place[1], 
+          Manipulate`Place[2], 
+          Manipulate`Place[3], 
+          Manipulate`Place[4], 
+          Manipulate`Place[5]}]}, "Options" :> {ControlPlacement -> Right}, 
+      "DefaultOptions" :> {}],
+     ImageSizeCache->{
+      715.9179676055909, {202.67842460935935`, 208.41035803491252`}},
+     SingleEvaluation->True],
+    Deinitialization:>None,
+    DynamicModuleValues:>{},
+    SynchronousInitialization->True,
+    UndoTrackedVariables:>{Typeset`show$$, Typeset`bookmarkMode$$},
+    UnsavedVariables:>{Typeset`initDone$$},
+    UntrackedVariables:>{Typeset`size$$}], "Manipulate",
+   Deployed->True,
+   StripOnInput->False],
+  Manipulate`InterpretManipulate[1]]], "Output",
+ CellChangeTimes->{3.9564918319614964`*^9},
+ CellLabel->"Out[9]=",ExpressionUUID->"12fc7d09-13a9-3d44-bb32-97bb52fb3d8d"]
+}, Open  ]]
+},
+WindowSize->{949, 478},
+WindowMargins->{{0, Automatic}, {Automatic, 0}},
+FrontEndVersion->"14.1 for Microsoft Windows (64-bit) (July 16, 2024)",
+StyleDefinitions->"Default.nb",
+ExpressionUUID->"9681eba8-f230-8b49-bda9-9849115c5396"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[CellGroupData[{
+Cell[576, 22, 18440, 479, 1807, "Input",ExpressionUUID->"4e54f34c-49b7-c246-aaab-f7adca226f82"],
+Cell[19019, 503, 5915, 121, 447, "Output",ExpressionUUID->"12fc7d09-13a9-3d44-bb32-97bb52fb3d8d"]
+}, Open  ]]
+}
+]
+*)
+
+(* End of internal cache information *)
+
