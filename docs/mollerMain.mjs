@@ -1,7 +1,7 @@
 import { mollerPhaseSpaceData } from "./mollerPhaseSpaceData.mjs";
 
-// Define initial parameters (immutable settings for the physics data)
-const params = {
+// Define physics parameters
+const physicsParams = {
   deltaT1: 10,
   zVal: 1,
   Bs: 8.0,
@@ -9,28 +9,47 @@ const params = {
   PlotRangeX: 0.1
 };
 
-// Save a copy of default parameters for full scenario resets.
-const defaultParams = { ...params };
+// Save a copy for full scenario resets.
+const defaultPhysicsParams = { ...physicsParams };
 
-// Utility: set up slider event listener to update params and display current value.
-function setupSlider(id, paramKey) {
+// Define graphics parameters (for things like dot size)
+const graphicsParams = {
+  dotSize: 5
+};
+
+// Utility: set up slider for physics parameters.
+function setupPhysicsSlider(id, paramKey) {
   const slider = document.getElementById(id);
   const valueDisplay = document.getElementById(id + 'Value');
   slider.addEventListener('input', () => {
-    params[paramKey] = parseFloat(slider.value);
+    physicsParams[paramKey] = parseFloat(slider.value);
     valueDisplay.textContent = slider.value;
     redraw();
   });
 }
 
-setupSlider('deltaT1', 'deltaT1');
-setupSlider('zVal', 'zVal');
-setupSlider('Bs', 'Bs');
-setupSlider('Lc1', 'Lc1');
-setupSlider('PlotRangeX', 'PlotRangeX');
+// Utility: set up slider for graphics parameters.
+function setupGraphicsSlider(id, paramKey) {
+  const slider = document.getElementById(id);
+  const valueDisplay = document.getElementById(id + 'Value');
+  slider.addEventListener('input', () => {
+    graphicsParams[paramKey] = parseFloat(slider.value);
+    valueDisplay.textContent = slider.value;
+    redraw();
+  });
+}
 
-// Scenarios of special interest.
-// Note that the "partial" scenarios adjust only a subset of parameters.
+// Set up sliders for physics parameters.
+setupPhysicsSlider('deltaT1', 'deltaT1');
+setupPhysicsSlider('zVal', 'zVal');
+setupPhysicsSlider('Bs', 'Bs');
+setupPhysicsSlider('Lc1', 'Lc1');
+setupPhysicsSlider('PlotRangeX', 'PlotRangeX');
+
+// Set up slider for graphics parameter (dot size).
+setupGraphicsSlider('dotSize', 'dotSize');
+
+// Physics scenarios (only affect physicsParams).
 const scenarios = [
   {
     title: "Default Scenario",
@@ -64,7 +83,7 @@ const scenarios = [
   }
 ];
 
-// Set up scenario buttons in the buttons container.
+// Set up scenario buttons in the buttons container (update only physics parameters).
 function setupScenarios() {
   const buttonsContainer = document.querySelector(".buttons");
   scenarios.forEach(scenario => {
@@ -75,23 +94,24 @@ function setupScenarios() {
     }
     btn.addEventListener("click", () => {
       if (scenario.partial) {
-        // For partial scenarios, only update provided keys:
+        // Only update the keys provided.
         for (const key in scenario.params) {
-          params[key] = scenario.params[key];
+          physicsParams[key] = scenario.params[key];
           const slider = document.getElementById(key);
           slider.value = scenario.params[key];
           const display = document.getElementById(key + "Value");
           display.textContent = scenario.params[key];
         }
       } else {
-        // For full scenarios, override all keys:
-        Object.keys(params).forEach(key => {
-          // Use scenario value if provided, otherwise reset to default.
-          params[key] = scenario.params.hasOwnProperty(key) ? scenario.params[key] : defaultParams[key];
+        // Full scenario: override all physics keys.
+        Object.keys(physicsParams).forEach(key => {
+          physicsParams[key] = scenario.params.hasOwnProperty(key)
+            ? scenario.params[key]
+            : defaultPhysicsParams[key];
           const slider = document.getElementById(key);
-          slider.value = params[key];
+          slider.value = physicsParams[key];
           const display = document.getElementById(key + "Value");
-          display.textContent = params[key];
+          display.textContent = physicsParams[key];
         });
       }
       redraw();
@@ -110,7 +130,7 @@ window.setup = () => {
 function setSquareCanvas() {
   const container = document.getElementById("canvasContainer");
   const containerWidth = container.clientWidth;
-  const availableHeight = window.innerHeight; // or subtract any offset if needed
+  const availableHeight = window.innerHeight;
   const size = Math.min(containerWidth, availableHeight);
   if (window.myCanvas) {
     resizeCanvas(size, size);
@@ -124,19 +144,17 @@ window.windowResized = () => {
   setSquareCanvas();
 };
 
-// p5.js draw – attached to the window as required
 window.draw = () => {
   background(240);
 
-  // Compute physics data inside draw, keeping variables local.
-  const { mollerPoints, mottPoints, xData, T0, T1 } = mollerPhaseSpaceData(params);
+  // Compute physics data only based on physics parameters.
+  const { mollerPoints, mottPoints, xData, T0, T1 } = mollerPhaseSpaceData(physicsParams);
 
-  // Define plotting area dimensions
   const margin = 40;
   const plotWidth = width - 2 * margin;
   const plotHeight = height - 2 * margin;
 
-  // Draw frame and axes labels
+  // Draw frame and axes.
   stroke(0);
   noFill();
   rect(margin, margin, plotWidth, plotHeight);
@@ -150,33 +168,30 @@ window.draw = () => {
   pop();
   noStroke();
   fill(0);
-  text("Phase Space at z = " + nf(params.zVal, 1, 2), width / 2, margin - 10);
+  text("Phase Space at z = " + nf(physicsParams.zVal, 1, 2), width / 2, margin - 10);
 
-  // Draw Møller points with a color gradient
+  // Draw Møller points as filled circles.
   const blueCol  = color(0, 0, 255);
   const blackCol = color(0, 0, 0);
   const redCol   = color(255, 0, 0);
   for (let i = 0; i < mollerPoints.length; i++) {
     const normVal = map(xData[i], T0, T1, 0, 1);
-    const col = normVal < 0.5
-      ? lerpColor(blueCol, blackCol, normVal * 2)
+    const col = normVal < 0.5 
+      ? lerpColor(blueCol, blackCol, normVal * 2) 
       : lerpColor(blackCol, redCol, (normVal - 0.5) * 2);
-    
-    const px = map(mollerPoints[i].x, -params.PlotRangeX, params.PlotRangeX, margin, width - margin);
+    const px = map(mollerPoints[i].x, -physicsParams.PlotRangeX, physicsParams.PlotRangeX, margin, width - margin);
     const py = map(mollerPoints[i].y, -0.1, 0.1, height - margin, margin);
-    
     fill(col);
     noStroke();
-    ellipse(px, py, 10, 10);
+    ellipse(px, py, graphicsParams.dotSize, graphicsParams.dotSize);
   }
 
-  // Draw Mott points as outlined violet circles
-  strokeWeight(1);
-  stroke(148, 0, 211);
-  noFill();
+  // Draw Mott points as filled circles.
+  fill(color(148, 0, 211));
+  noStroke();
   mottPoints.forEach(pt => {
-    const px = map(pt.x, -params.PlotRangeX, params.PlotRangeX, margin, width - margin);
+    const px = map(pt.x, -physicsParams.PlotRangeX, physicsParams.PlotRangeX, margin, width - margin);
     const py = map(pt.y, -0.1, 0.1, height - margin, margin);
-    ellipse(px, py, 2, 2);
+    ellipse(px, py, graphicsParams.dotSize, graphicsParams.dotSize);
   });
 };
