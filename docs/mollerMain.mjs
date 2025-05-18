@@ -80,6 +80,16 @@ const scenarios = [
     title: "ΔT1 = 50",
     partial: true,
     params: { deltaT1: 50 }
+  },
+  {
+    title: "RangeX = 0.01",
+    partial: true,
+    params: { PlotRangeX: 0.01 }
+  },
+  {
+    title: "RangeX = 0.1",
+    partial: true,
+    params: { PlotRangeX: 0.1 }
   }
 ];
 
@@ -169,6 +179,63 @@ window.draw = () => {
   noStroke();
   fill(0);
   text("Phase Space at z = " + nf(physicsParams.zVal, 1, 2), width / 2, margin - 10);
+
+  // Draw grid lines and ticks over the plot area.
+  const n = 5; // number of grid lines (adjust as needed)
+  stroke(200); // light gray color for grid lines
+  strokeWeight(0.5); // thin grid lines
+  
+  // Horizontal grid lines and tick marks.
+  for (let i = 0; i < n; i++) {
+    let y = margin + (i * plotHeight) / (n - 1);
+    line(margin, y, width - margin, y);
+    // Draw tick marks on the left (vertical axis) and right boundaries.
+    line(margin - 5, y, margin, y);           // left tick
+    line(width - margin, y, width - margin + 5, y); // right tick
+  }
+  
+  // Vertical grid lines and tick marks.
+  for (let i = 0; i < n; i++) {
+    let x = margin + (i * plotWidth) / (n - 1);
+    line(x, margin, x, height - margin);
+    // Draw tick marks along the bottom and top boundaries.
+    line(x, height - margin, x, height - margin + 5); // bottom tick
+    line(x, margin, x, margin - 5);                   // top tick
+  }
+
+  // Draw x-axis tick marks and labels.
+  const xTicks = 10; // number of ticks along the x-axis
+  textSize(10);
+  fill(0);
+  textAlign(CENTER, TOP);
+  for (let i = 0; i < xTicks; i++) {
+    let t = i / (xTicks - 1);
+    let x = lerp(margin, width - margin, t);
+    // Map from display coordinates to data value.
+    let value = lerp(-physicsParams.PlotRangeX, physicsParams.PlotRangeX, t);
+    // Draw a short tick mark.
+    stroke(200);
+    line(x, height - margin, x, height - margin + 3);
+    // Draw a label slightly below the tick.
+    noStroke();
+    text(nf(value, 1, 2), x, height - margin + 5);
+  }
+
+  // Draw y-axis tick marks and labels.
+  const yTicks = 10; // number of ticks along the y-axis
+  textAlign(RIGHT, CENTER);
+  for (let i = 0; i < yTicks; i++) {
+    let t = i / (yTicks - 1);
+    let y = lerp(height - margin, margin, t);
+    // Map from display coordinates to data value for y.
+    let value = lerp(-0.1, 0.1, t);
+    // Draw a short tick mark.
+    stroke(200);
+    line(margin - 3, y, margin, y);
+    // Draw a label to the left of the tick.
+    noStroke();
+    text(nf(value, 1, 2), margin - 5, y);
+  }
 
   // Draw Møller points as filled circles.
   const blueCol  = color(0, 0, 255);
