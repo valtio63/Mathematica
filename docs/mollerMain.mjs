@@ -161,11 +161,13 @@ window.draw = () => {
     const col = normVal < 0.5
       ? lerpColor(blueCol, blackCol, normVal * 2)
       : lerpColor(blackCol, redCol, (normVal - 0.5) * 2);
-    stroke(col);
-    strokeWeight(4);
+    
     const px = map(mollerPoints[i].x, -params.PlotRangeX, params.PlotRangeX, margin, width - margin);
     const py = map(mollerPoints[i].y, -0.1, 0.1, height - margin, margin);
-    point(px, py);
+    
+    fill(col);
+    noStroke();
+    ellipse(px, py, 20, 20);
   }
 
   // Draw Mott points as outlined violet circles
