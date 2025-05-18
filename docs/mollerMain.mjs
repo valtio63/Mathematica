@@ -167,7 +167,7 @@ window.draw = () => {
     
     fill(col);
     noStroke();
-    ellipse(px, py, 20, 20);
+    ellipse(px, py, 10, 10);
   }
 
   // Draw Mott points as outlined violet circles
@@ -177,6 +177,6 @@ window.draw = () => {
   mottPoints.forEach(pt => {
     const px = map(pt.x, -params.PlotRangeX, params.PlotRangeX, margin, width - margin);
     const py = map(pt.y, -0.1, 0.1, height - margin, margin);
-    ellipse(px, py, 8, 8);
+    ellipse(px, py, 2, 2);
   });
 };
