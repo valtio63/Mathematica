@@ -84,7 +84,7 @@ export function mollerPhaseSpaceData(params) {
   const mollerPoints = [];
   const mottPoints = [];
   const xData = [];
-  const centerT = 155.0 / 2;
+  const centerT = params.centerT;
   const T0 = centerT - params.deltaT1;
   const T1 = centerT + params.deltaT1;
   const steps = 2450;
