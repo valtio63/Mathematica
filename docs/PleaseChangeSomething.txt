@@ -1,2 +1,11 @@
 2025-05-21
 Please add slide to varite variable "centerT" from 10.0 to 155.0-10.0 when possible with "reset" back to 155.0/2 and fixed step 1.0
+I mean hier:
+  // --- Begin computation ---
+  const mollerPoints = [];
+  const mottPoints = [];
+  const xData = [];
+  const centerT = 155.0 / 2; // --- this energy ---
+  const T0 = centerT - params.deltaT1;
+  const T1 = centerT + params.deltaT1;
+  const steps = 2450;
