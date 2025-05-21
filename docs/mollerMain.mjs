@@ -6,7 +6,8 @@ const physicsParams = {
   zVal: 1,
   Bs: 8.0,
   Lc1: 0.75,
-  PlotRangeX: 0.1
+  PlotRangeX: 0.1,
+  centerT: 155.0 / 2
 };
 
 // Save a copy for full scenario resets.
@@ -45,6 +46,7 @@ setupPhysicsSlider('zVal', 'zVal');
 setupPhysicsSlider('Bs', 'Bs');
 setupPhysicsSlider('Lc1', 'Lc1');
 setupPhysicsSlider('PlotRangeX', 'PlotRangeX');
+setupPhysicsSlider('centerT', 'centerT');
 
 // Set up slider for graphics parameter (dot size).
 setupGraphicsSlider('dotSize', 'dotSize');
@@ -90,6 +92,11 @@ const scenarios = [
     title: "RangeX = 0.1",
     partial: true,
     params: { PlotRangeX: 0.1 }
+  },
+  {
+    title: "Reset centerT = 155.0 / 2",
+    partial: true,
+    params: { centerT: (155.0 / 2) }
   }
 ];
 
