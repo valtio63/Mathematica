@@ -1,27 +1,34 @@
+const electronMass = 0.510998; // MeV
+const speedOfLight = 2.99792458e8; // m/s
+
+export function magneticRigidity(T) {
+  return ((T + electronMass) * 1e6) / speedOfLight;
+}
+
+/**
+ * @param intermediateResults optional object that can be used to collect
+ *                            some of the intermediate results that are
+ *                            not exposed otherwise. For testing only.
+ */
+export function mollerInitialConditions(T0, T, intermediateResults = null) {
+  const E0 = T0 + electronMass;
+  const E1 = T + electronMass;
+  const p0 = Math.sqrt(E0 * E0 - electronMass * electronMass);
+  const p1 = Math.sqrt(E1 * E1 - electronMass * electronMass);
+  const E2 = E0 + electronMass - E1;
+  const p2 = Math.sqrt(E2 * E2 - electronMass * electronMass);
+  const theta1 = Math.acos((p0 * p0 + p1 * p1 - p2 * p2) / (2 * p0 * p1));
+  intermediateResults && (intermediateResults.theta1 = theta1);
+  const phi = Math.random() * 2 * Math.PI;
+  return [
+    Math.random() * 0.002 - 0.001, 
+    theta1 * Math.cos(phi), 
+    Math.random() * 0.002 - 0.001, 
+    theta1 * Math.sin(phi)
+  ];
+}
+
 export function mollerPhaseSpaceData(params) {
-  const electronMass = 0.510998; // MeV
-  const speedOfLight = 2.99792458e8; // m/s
-
-  function magneticRigidity(T) {
-    return (T * 1e6) / speedOfLight;
-  }
-
-  function mollerInitialConditions(T0, T) {
-    const E0 = T0 + electronMass;
-    const E1 = T + electronMass;
-    const p0 = Math.sqrt(E0 * E0 - electronMass * electronMass);
-    const p1 = Math.sqrt(E1 * E1 - electronMass * electronMass);
-    const E2 = E0 + electronMass - E1;
-    const p2 = Math.sqrt(E2 * E2 - electronMass * electronMass);
-    const theta1 = Math.acos((p0 * p0 + p1 * p1 - p2 * p2) / (2 * p0 * p1));
-    const phi = Math.random() * 2 * Math.PI;
-    return [
-      Math.random() * 0.002 - 0.001, 
-      theta1 * Math.cos(phi), 
-      Math.random() * 0.002 - 0.001, 
-      theta1 * Math.sin(phi)
-    ];
-  }
 
   function mottInitialConditions() {
     const x = Math.random() * 0.002 - 0.001;
