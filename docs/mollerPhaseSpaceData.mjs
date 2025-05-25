@@ -10,21 +10,39 @@ export function magneticRigidity(T) {
  *                            some of the intermediate results that are
  *                            not exposed otherwise. For testing only.
  */
-export function mollerInitialConditions(T0, T, intermediateResults = null) {
+export function mollerInitialConditions(T0, T1) {
   const E0 = T0 + electronMass;
-  const E1 = T + electronMass;
+  const E1 = T1 + electronMass;
+  const E2 = E0 + electronMass - E1;
+
+  const T2 = T0 - T1;
+
   const p0 = Math.sqrt(E0 * E0 - electronMass * electronMass);
   const p1 = Math.sqrt(E1 * E1 - electronMass * electronMass);
-  const E2 = E0 + electronMass - E1;
   const p2 = Math.sqrt(E2 * E2 - electronMass * electronMass);
-  const theta1 = Math.acos((p0 * p0 + p1 * p1 - p2 * p2) / (2 * p0 * p1));
-  intermediateResults && (intermediateResults.theta1 = theta1);
+
+  const theta1 = +Math.acos((p0 * p0 + p1 * p1 - p2 * p2) / (2 * p0 * p1));
+  const theta2 = -Math.acos((p0 * p0 + p2 * p2 - p1 * p1) / (2 * p0 * p2));
   const phi = Math.random() * 2 * Math.PI;
+  const startCoordX = Math.random() * 0.002 - 0.001;
+  const startCoordY = Math.random() * 0.002 - 0.001;
+
+  // Creates an object with energy, theta, and 4-component vector
+  function mkInit(T, theta) {
+    return {
+      T,
+      theta,
+      vec: [
+        startCoordX, 
+        theta * Math.cos(phi), 
+        startCoordY, 
+        theta * Math.sin(phi)
+      ]
+    };
+  }
   return [
-    Math.random() * 0.002 - 0.001, 
-    theta1 * Math.cos(phi), 
-    Math.random() * 0.002 - 0.001, 
-    theta1 * Math.sin(phi)
+    mkInit(T1, theta1),
+    mkInit(T2, theta2)
   ];
 }
 
@@ -92,19 +110,42 @@ export function mollerPhaseSpaceData(params) {
   const mottPoints = [];
   const xData = [];
   const centerT = params.centerT;
-  const T0 = centerT - params.deltaT1;
-  const T1 = centerT + params.deltaT1;
-  const steps = 2450;
+  const Tmin = centerT - params.deltaT1;
+  const Tmax = centerT + params.deltaT1;
+  const steps = 2550;
 
   // Compute Møller points.
   for (let i = 0; i <= steps; i++) {
-    const T = T0 + (T1 - T0) * (i / steps);
-    xData.push(T);
+    const T1 = Tmin + (Tmax - Tmin) * (i / steps);
+    const electronInitialConds =
+      mollerInitialConditions(155.0, T1);
+
     const md = driftMatrix(params.Lc1);
-    const ms = solenoidMatrix(params.Bs, 0.40607 * params.zVal, T);
-    const combined = multiplyMatrices(md, ms);
-    const vec = multiplyMatrixVector(combined, mollerInitialConditions(155.0, T));
-    mollerPoints.push({ x: vec[0], y: vec[2] });
+
+    let sharedCorrectionAngle;
+
+    for (let initCond of electronInitialConds) {
+      const ms = solenoidMatrix(params.Bs, 0.40607 * params.zVal, initCond.T);
+      const combined = multiplyMatrices(md, ms);
+      const vec = multiplyMatrixVector(combined, initCond.vec)
+
+      const x = vec[0];
+      const y = vec[2];
+      if (sharedCorrectionAngle === undefined) {  
+        sharedCorrectionAngle = Math.atan2(y, x);
+      }
+      
+      const sin_corr = Math.sin(sharedCorrectionAngle);
+      const cos_corr = Math.cos(sharedCorrectionAngle);
+      const correctedX = +cos_corr * x + sin_corr * y;
+      const correctedY = -sin_corr * x + cos_corr * y;
+
+      xData.push(initCond.T);  
+      mollerPoints.push({
+        x: params.normalizationOn ? correctedX : x,
+        y: params.normalizationOn ? correctedY : y
+      });
+    }
   }
 
   // Compute Mott points.
@@ -116,5 +157,5 @@ export function mollerPhaseSpaceData(params) {
     mottPoints.push({ x: vec[0], y: vec[2] });
   }
 
-  return { mollerPoints, mottPoints, xData, T0, T1 };
+  return { mollerPoints, mottPoints, xData, T0: Tmin, T1: Tmax };
 }
