@@ -7,7 +7,8 @@ const physicsParams = {
   Bs: 8.0,
   Lc1: 0.75,
   PlotRangeX: 0.1,
-  centerT: 155.0 / 2
+  centerT: 155.0 / 2,
+  normalizationOn: true
 };
 
 // Save a copy for full scenario resets.
@@ -45,29 +46,20 @@ setupPhysicsSlider('deltaT1', 'deltaT1');
 setupPhysicsSlider('zVal', 'zVal');
 setupPhysicsSlider('Bs', 'Bs');
 setupPhysicsSlider('Lc1', 'Lc1');
-setupPhysicsSlider('PlotRangeX', 'PlotRangeX');
 setupPhysicsSlider('centerT', 'centerT');
 
 // Set up slider for graphics parameter (dot size).
 setupGraphicsSlider('dotSize', 'dotSize');
 
+// Set up the normalizationOn toggle checkbox.
+const normalizationCheckbox = document.getElementById('normalizationOn');
+normalizationCheckbox.addEventListener('change', () => {
+  physicsParams.normalizationOn = normalizationCheckbox.checked;
+  redraw();
+});
+
 // Physics scenarios (only affect physicsParams).
 const scenarios = [
-  {
-    title: "Default Scenario",
-    partial: false,
-    params: { deltaT1: 35, zVal: 0.47, Bs: 8.0, Lc1: 0.75, PlotRangeX: 0.1 }
-  },
-  {
-    title: "Vary PlotRangeX",
-    partial: false,
-    params: { deltaT1: 20, zVal: 0.7, Bs: 6.5, Lc1: 1.2, PlotRangeX: 0.19 }
-  },
-  {
-    title: "High ΔT1",
-    partial: false,
-    params: { deltaT1: 73.6, zVal: 0.9, Bs: 3.0, Lc1: 0.5, PlotRangeX: 0.1 }
-  },
   {
     title: "ΔT1 = 0.1",
     partial: true,
@@ -165,7 +157,9 @@ window.draw = () => {
   background(240);
 
   // Compute physics data only based on physics parameters.
-  const { mollerPoints, mottPoints, xData, T0, T1 } = mollerPhaseSpaceData(physicsParams);
+  const observer = {};
+  const { mollerPoints, mottPoints, xData, T0, T1 } = mollerPhaseSpaceData(physicsParams, observer);
+  console.log("Observer:", observer);
 
   const margin = 40;
   const plotWidth = width - 2 * margin;
