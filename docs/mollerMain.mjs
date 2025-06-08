@@ -178,8 +178,6 @@ function setSpanText(id, value) {
  */
 function physicalCoordsToPlotCoords({ x, y }) {
   const margin = 40;
-  const plotWidth = width - 2 * margin;
-  const plotHeight = height - 2 * margin;
   const px = map(
     x,
     -physicsParams.PlotRangeX,
@@ -203,8 +201,6 @@ function physicalCoordsToPlotCoords({ x, y }) {
  */
 function plotCoordsToPhysicalCoords({ x, y }) {
   const margin = 40;
-  const plotWidth = width - 2 * margin;
-  const plotHeight = height - 2 * margin;
   const physX = map(
     x,
     margin,
