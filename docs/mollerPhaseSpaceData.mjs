@@ -208,6 +208,17 @@ export function mollerPhaseSpaceData(params) {
     }
   }
 
+  function multiplyVectorWithAll(...matsVec) {
+    // The last element is a vector
+    const vec = matsVec[matsVec.length - 1];
+    const mats = matsVec.slice(0, matsVec.length - 1);
+    let res = vec;
+    for (let m = mats.length -1; m >= 0; m--) {
+      res = multiplyMatrixVector(mats[m], res); 
+    }
+    return res;
+  }
+
   // --- Begin computation ---
   const mollerPoints = [];
   const mottPoints = [];
@@ -215,7 +226,7 @@ export function mollerPhaseSpaceData(params) {
   const centerT = params.centerT;
   const Tmin = centerT - params.deltaT1;
   const Tmax = centerT + params.deltaT1;
-  const steps = 2550;
+  const steps = 12550;
 
   // Compute Møller points.
   for (let i = 0; i <= steps; i++) {
@@ -230,9 +241,7 @@ export function mollerPhaseSpaceData(params) {
     for (let initCond of electronInitialConds) {
       const ms = solenoidMatrix(params.Bs, 0.40607 * params.zVal, initCond.T);
       const quadrupoleMatrix = quadMatrix(params.grad, QUAD_LENGTH, initCond.T);
-
-      const combined = multiplyMatrices(md, quadrupoleMatrix, md, md, ms);
-      const vec = multiplyMatrixVector(combined, initCond.vec)
+      const vec = multiplyVectorWithAll(md, quadrupoleMatrix, md, md, ms, initCond.vec);
 
       const x = vec[0];
       const y = vec[2];
