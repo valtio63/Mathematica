@@ -1,5 +1,8 @@
 const electronMass = 0.510998; // MeV
 const speedOfLight = 2.99792458e8; // m/s
+const QUAD_LENGTH = 0.38; // Length of the quadrupole magnet in meters
+const DRIFT_LENGTH = 0.50; // Length of the drift space in meters
+const DETECTOR_DIAM = 0.02; // Diameter of the detector in meters
 
 export function magneticRigidity(T) {
   return ((T + electronMass) * 1e6) / speedOfLight;
@@ -46,6 +49,47 @@ export function mollerInitialConditions(T0, T1) {
   ];
 }
 
+export function detectorHitPredicate(params) {
+  if (params.detector_geometry === 'circle') {
+    const radius = DETECTOR_DIAM / 2;
+    const rSquare = radius * radius;
+    return point2d => {
+      const yDist = point2d.y - params.detector_center_y;
+      return (point2d.x * point2d.x + yDist * yDist) <= rSquare;
+    };
+  } else {
+    const halfSize = DETECTOR_DIAM / 2;
+    return point2d => {
+      const xDist = Math.abs(point2d.x);
+      const yDist = Math.abs(point2d.y - params.detector_center_y);
+      return xDist <= halfSize && yDist <= halfSize;
+    };
+  }
+}
+
+/** Counts number of array elements satisfying the predicate. */
+function count(arr, pred) {
+  let res = 0;
+  for (const x of arr) {
+    if (pred(x)) {
+      res++;
+    }
+  }
+  return res;
+}
+
+/**
+ * Takes the data of all points in the plane, extracts only
+ * the hits that land on the detector geometry.
+ */
+export function countDetectorHits(params, mott, moller) {
+  const hitPredicate = detectorHitPredicate(params);
+  const mottHits = count(mott, hitPredicate);
+  const mollerHits = count(moller, hitPredicate);
+
+  return { mottHits, mollerHits };
+}
+
 export function mollerPhaseSpaceData(params) {
 
   function mottInitialConditions() {
@@ -78,6 +122,42 @@ export function mollerPhaseSpaceData(params) {
     ];
   }
 
+  function quadMatrix(grad, lq, t) {
+    const k = grad / magneticRigidity(t);
+    if (k === 0) return math.identity(4)._data;
+  
+    let mx, my;
+    if (k > 0) {
+      const rootK = Math.sqrt(k);
+      mx = [
+        [Math.cos(rootK * lq), Math.sin(rootK * lq) / rootK],
+        [-rootK * Math.sin(rootK * lq), Math.cos(rootK * lq)]
+      ];
+      my = [
+        [Math.cosh(rootK * lq), Math.sinh(rootK * lq) / rootK],
+        [rootK * Math.sinh(rootK * lq), Math.cosh(rootK * lq)]
+      ];
+    } else {
+      const rootK = Math.sqrt(-k);
+      mx = [
+        [Math.cosh(rootK * lq), Math.sinh(rootK * lq) / rootK],
+        [rootK * Math.sinh(rootK * lq), Math.cosh(rootK * lq)]
+      ];
+      my = [
+        [Math.cos(rootK * lq), Math.sin(rootK * lq) / rootK],
+        [-rootK * Math.sin(rootK * lq), Math.cos(rootK * lq)]
+      ];
+    }
+
+    return [
+      [mx[0][0], mx[0][1], 0, 0],
+      [mx[1][0], mx[1][1], 0, 0],
+      [0, 0, my[0][0], my[0][1]],
+      [0, 0, my[1][0], my[1][1]]
+    ];
+  }
+
+
   function multiplyMatrixVector(m, v) {
     const result = [];
     for (let i = 0; i < 4; i++) {
@@ -90,7 +170,7 @@ export function mollerPhaseSpaceData(params) {
     return result;
   }
 
-  function multiplyMatrices(a, b) {
+  function multiplyMatrices_(a, b) {
     const result = [];
     for (let i = 0; i < 4; i++){
        result[i] = [];
@@ -103,6 +183,29 @@ export function mollerPhaseSpaceData(params) {
        }
     }
     return result;
+  }
+
+  function eye(dim) {
+    const result = [];
+    for (let i = 0; i < dim; i++) {
+      result[i] = [];
+      for (let j = 0; j < dim; j++) {
+        result[i][j] = (i === j) ? 1 : 0;
+      }
+    }
+    return result;
+  }
+
+  function multiplyMatrices(...matrices) {
+    if (matrices.length === 0) {
+      throw new Error("No matrices provided for multiplication.");
+    } else {
+      const firstMatrix = matrices[0];
+      const dim = firstMatrix.length;
+      const identityMatrix = eye(dim);
+      // Start with the identity matrix, reduce all other matrices by multiplying them from left to right
+      return matrices.reduce(multiplyMatrices_, identityMatrix);
+    }
   }
 
   // --- Begin computation ---
@@ -126,7 +229,9 @@ export function mollerPhaseSpaceData(params) {
 
     for (let initCond of electronInitialConds) {
       const ms = solenoidMatrix(params.Bs, 0.40607 * params.zVal, initCond.T);
-      const combined = multiplyMatrices(md, ms);
+      const quadrupoleMatrix = quadMatrix(params.grad, QUAD_LENGTH, initCond.T);
+
+      const combined = multiplyMatrices(md, quadrupoleMatrix, md, md, ms);
       const vec = multiplyMatrixVector(combined, initCond.vec)
 
       const x = vec[0];
@@ -157,5 +262,17 @@ export function mollerPhaseSpaceData(params) {
     mottPoints.push({ x: vec[0], y: vec[2] });
   }
 
-  return { mollerPoints, mottPoints, xData, T0: Tmin, T1: Tmax };
+  const { mottHits, mollerHits } = countDetectorHits(params, mottPoints, mollerPoints);
+
+  console.log("Counts: ", mottHits, mollerHits)
+
+  return {
+    mollerPoints,
+    mottPoints,
+    mollerHits,
+    mottHits,
+    xData,
+    T0: Tmin,
+    T1: Tmax
+  };
 }
