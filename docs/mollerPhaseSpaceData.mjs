@@ -208,7 +208,7 @@ export function mollerPhaseSpaceData(params) {
     }
   }
 
-  function multiplyVectorWithAll(matsVec) {
+  function multiplyVectorWithAll(...matsVec) {
     // The last element is a vector
     const vec = matsVec[matsVec.length - 1];
     const mats = matsVec.slice(0, matsVec.length - 1);
@@ -241,7 +241,7 @@ export function mollerPhaseSpaceData(params) {
     for (let initCond of electronInitialConds) {
       const ms = solenoidMatrix(params.Bs, 0.40607 * params.zVal, initCond.T);
       const quadrupoleMatrix = quadMatrix(params.grad, QUAD_LENGTH, initCond.T);
-      const vec = multiplyVectoryWithAll(md, quadrupoleMatrix, md, md, ms, initCond.vec);
+      const vec = multiplyVectorWithAll(md, quadrupoleMatrix, md, md, ms, initCond.vec);
 
       const x = vec[0];
       const y = vec[2];
