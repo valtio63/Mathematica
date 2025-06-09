@@ -1,25 +1,124 @@
+import { Slider } from "./ui.mjs";
 import { mollerPhaseSpaceData } from "./mollerPhaseSpaceData.mjs";
 
-// Define physics parameters
+const physicsParamsSliderSettings = {
+  numParticles: {
+    min: 100,
+    max: 50000,
+    step: 100,
+    value: 10000,
+    label: "num Particles",
+    id: "num_particles"
+  },
+  deltaT1: {
+    min: 0.1,
+    max: 77,
+    step: 0.1,
+    value: 10,
+    label: "ΔT1",
+    id: "deltaT1"
+  },
+  zVal: {
+    min: 0,
+    max: 1,
+    step: 0.01,
+    value: 1,
+    label: "z Scale",
+    id: "zVal"
+  },
+  Bs: {
+    min: 0.01,
+    max: 9,
+    step: 0.1,
+    value: 8.0,
+    label: "Bₛ [T]",
+    id: "Bs"
+  },
+  grad: {
+    min: -2.5,
+    max: 2.5,
+    step: 0.01,
+    value: -1.7,
+    label: "grad_q [T/m]",
+    id: "grad"
+  },
+  Lc1: {
+    min: 0,
+    max: 2,
+    step: 0.01,
+    value: 0.75,
+    label: "Drift L [m]",
+    id: "Lc1"
+  },
+  centerT: {
+    min: 10.0,
+    max: 145.0,
+    step: 1.0,
+    value: 77.5,
+    label: "centerT",
+    id: "centerT"
+  }
+}
+
+const physicsParamsCheckboxSettings = {
+  normalizationOn: {
+    label: "Normalization",
+    id: "normalizationOn",
+    checked: false
+  }
+}
+
+const measurementSliderSettings = {
+  detector_center_y: {
+    min: -0.5,
+    max: 0.5,
+    step: 0.01,
+    value: 0.2,
+    label: "Detector Offset",
+    id: "detector_center_y"
+  },
+  detector_width: {
+    min: 0.01,
+    max: 0.1,
+    step: 0.01,
+    value: 0.02,
+    label: "Detector Width",
+    id: "detector_width"
+  }
+}
+
+const graphicsSliderSettings = {
+  dotSize: {
+    min: 1,
+    max: 10,
+    step: 1,
+    value: 5,
+    label: "Dot Size",
+    id: "dotSize"
+  }
+}
+
+// Define physics parameters by extracting default values from settings
 const physicsParams = {
-  deltaT1: 10,
-  zVal: 1,
-  Bs: 8.0,
-  grad: 1.7,
-  Lc1: 0.75,
-  PlotRangeX: 0.2,
-  centerT: 155.0 / 2,
-  normalizationOn: true,
-  detector_center_y: 0.2,
-  detector_geometry: "square"
-};
+  ...Object.fromEntries(
+    Object.entries(physicsParamsSliderSettings).map(([key, setting]) => [key, setting.value])
+  ),
+  ...Object.fromEntries(
+    Object.entries(physicsParamsCheckboxSettings).map(([key, setting]) => [key, setting.checked])
+  ),
+}
 
-// Save a copy for full scenario resets.
-const defaultPhysicsParams = { ...physicsParams };
+const measurementParams = {
+  ...Object.fromEntries(
+    Object.entries(measurementSliderSettings).map(([key, setting]) => [key, setting.value])
+  ),
+  detector_geometry: "square" // Default value for detector geometry
+}
 
-// Define graphics parameters (for things like dot size)
 const graphicsParams = {
-  dotSize: 5
+  ...Object.fromEntries(
+    Object.entries(graphicsSliderSettings).map(([key, setting]) => [key, setting.value])
+  )
 };
 
 // Utility: set up slider for physics parameters.
