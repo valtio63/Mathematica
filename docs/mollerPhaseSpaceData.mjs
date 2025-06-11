@@ -44,6 +44,17 @@ export function mollerInitialConditions(T0, T1) {
   ];
 }
 
+function eye(dim) {
+  const result = [];
+  for (let i = 0; i < dim; i++) {
+    result[i] = [];
+    for (let j = 0; j < dim; j++) {
+      result[i][j] = (i === j) ? 1 : 0;
+    }
+  }
+  return result;
+}
+
 export function mollerPhaseSpaceData(params) {
 
   function mottInitialConditions() {
@@ -78,7 +89,7 @@ export function mollerPhaseSpaceData(params) {
 
   function quadMatrix(grad, lq, t) {
     const k = grad / magneticRigidity(t);
-    if (k === 0) return math.identity(4)._data;
+    if (k === 0) return eye(4);
   
     let mx, my;
     if (k > 0) {
@@ -139,16 +150,7 @@ export function mollerPhaseSpaceData(params) {
     return result;
   }
 
-  function eye(dim) {
-    const result = [];
-    for (let i = 0; i < dim; i++) {
-      result[i] = [];
-      for (let j = 0; j < dim; j++) {
-        result[i][j] = (i === j) ? 1 : 0;
-      }
-    }
-    return result;
-  }
+
 
   function multiplyMatrices(...matrices) {
     if (matrices.length === 0) {

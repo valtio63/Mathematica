@@ -73,8 +73,8 @@ const physicsParamsCheckboxSettings = {
 
 const measurementSliderSettings = {
   detector_center_x: {
-    min: -0.5,
-    max: 0.5,
+    min: -0.75,
+    max: 0.75,
     step: 0.01,
     label: "Detector Offset",
     id: "detector_center_y"
@@ -131,6 +131,10 @@ const buttons = [
   {
     title: "ΔT1 = 50",
     settings: { physicsParams: { deltaT1: 50 } }
+  },
+  {
+    title: "Quad off",
+    settings: { physicsParams: { grad: 0 } }
   },
 ];
 

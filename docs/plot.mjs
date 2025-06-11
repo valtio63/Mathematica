@@ -1,321 +1,240 @@
-// Plotting functionality for the physics simulation - simplified
-
-/**
- * Sets up the canvas for drawing the visualization
- * @param {object} model - The application model
- */
-export function setupCanvas(model) {
-  // Constants for the plot
+export function setupPlot(model) {
+  // Create constants for plotting
   const DRAW_CONST = {
     margin: 40,
-    gridLines: 5,
-    xTicks: 10,
-    yTicks: 5,
-    xLabel: "x [m]",
-    yLabel: "y [m]",
-    titlePrefix: "Phase Space at z = ",
-    tickLabelSize: 10,
-    tickLength: 5,
-    tickLabelOffset: 5,
-    // Fixed physical ranges
-    plotXMin: -0.5,
-    plotXMax: 0.5,
+    plotXMin: -0.6,
+    plotXMax: 0.6,
     plotYMin: -0.25,
     plotYMax: 0.25,
-    // Colors
     mollerColorA: [0, 0, 255],  // Blue
     mollerColorB: [0, 0, 0],    // Black
     mollerColorC: [255, 0, 0],  // Red
     mottColor: [148, 0, 211],   // Purple
     detectorColor: [0, 255, 0], // Green
-    detectorFill: [200, 240, 255, 180] // Pale cyan-gray, semi-transparent
+    detectorFill: [200, 240, 255, 0.7] // Pale cyan-gray, semi-transparent
   };
 
-  const sketch = (p) => {
-    p.setup = () => {
-      setupCanvasSize(p);
-      p.noLoop(); // We'll redraw only when model changes
-    };
-
-    p.windowResized = () => {
-      setupCanvasSize(p);
-      p.redraw();
-    };
-
-function setupCanvasSize(p) {
-  const container = document.getElementById('canvasContainer');
+  // Create the container if it doesn't exist
+  let container = document.getElementById('canvasContainer');
   if (!container) {
-    console.error('Cannot find #canvasContainer');
-    return;
+    container = document.createElement('div');
+    container.id = 'canvasContainer';
+    document.querySelector('.plot').appendChild(container);
   }
   
-  console.log('Container dimensions:', container.offsetWidth, 'x', container.offsetHeight);
+  // Create canvas element
+  const canvas = document.createElement('canvas');
+  canvas.style.width = '100%';
+  canvas.style.height = 'auto';
+  container.innerHTML = '';
+  container.appendChild(canvas);
   
-  // Use the aspect ratio from CSS (2:1)
-  const containerWidth = container.offsetWidth;
-  const size = containerWidth;
-  const height = containerWidth / 2 - 1; // Match the aspect ratio from CSS
+  // Setup sizing
+  function resizeCanvas() {
+    const width = container.offsetWidth;
+    const height = width / 2;
+    canvas.width = width;
+    canvas.height = height;
+    container.style.height = height + 'px';
+    drawPlot();
+  }
   
-  console.log('Creating canvas with dimensions:', size, 'x', height);
+  // Map physical coords to canvas coords
+  function mapX(x) {
+    return DRAW_CONST.margin + (x - DRAW_CONST.plotXMin) / 
+      (DRAW_CONST.plotXMax - DRAW_CONST.plotXMin) * 
+      (canvas.width - 2 * DRAW_CONST.margin);
+  }
   
-  if (p.canvas) {
-    p.resizeCanvas(size, height);
-  } else {
-    const canvas = p.createCanvas(size, height);
-    canvas.parent(container);
+  function mapY(y) {
+    return canvas.height - DRAW_CONST.margin - (y - DRAW_CONST.plotYMin) / 
+      (DRAW_CONST.plotYMax - DRAW_CONST.plotYMin) * 
+      (canvas.height - 2 * DRAW_CONST.margin);
+  }
+  
+
+  function drawGridAndTicks(ctx) {
+  // Set up styles for grid lines
+  ctx.strokeStyle = '#ddd'; // Light gray for grid lines
+  ctx.lineWidth = 0.5;
+  
+  // Draw vertical grid lines (every 0.1 units)
+  for (let x = Math.ceil(DRAW_CONST.plotXMin * 10) / 10; x <= DRAW_CONST.plotXMax; x += 0.1) {
+    const px = mapX(x);
+    ctx.beginPath();
+    ctx.moveTo(px, DRAW_CONST.margin);
+    ctx.lineTo(px, canvas.height - DRAW_CONST.margin);
+    ctx.stroke();
+  }
+  
+  // Draw horizontal grid lines (every 0.1 units)
+  for (let y = Math.ceil(DRAW_CONST.plotYMin * 10) / 10; y <= DRAW_CONST.plotYMax; y += 0.1) {
+    const py = mapY(y);
+    ctx.beginPath();
+    ctx.moveTo(DRAW_CONST.margin, py);
+    ctx.lineTo(canvas.width - DRAW_CONST.margin, py);
+    ctx.stroke();
+  }
+  
+  // Draw ticks (every 0.05 units)
+  ctx.strokeStyle = '#000'; // Black for ticks
+  ctx.lineWidth = 1;
+  const tickSize = 6; // Pixel length of tick marks
+  
+  // X-axis ticks - define explicit values to avoid floating point issues
+  const xTicks = [];
+  for (let i = -12; i <= 12; i++) {
+    xTicks.push(i * 0.05);
+  }
+  
+  // Draw each X tick with label
+  xTicks.forEach(x => {
+    const px = mapX(x);
     
-    // Fix the positioning of the canvas
-    setTimeout(() => {
-      const canvasElement = container.querySelector('canvas');
-      if (canvasElement) {
-        canvasElement.style.position = 'static'; // Change from absolute to static
-        canvasElement.style.display = 'block';
-        canvasElement.style.margin = '0 auto';
-        
-        // Force the container to have the correct height
-        container.style.height = height + 'px';
-        
-        console.log('Fixed canvas positioning');
-      }
-    }, 100);
+    // Draw tick mark
+    ctx.beginPath();
+    ctx.moveTo(px, canvas.height - DRAW_CONST.margin);
+    ctx.lineTo(px, canvas.height - DRAW_CONST.margin + tickSize);
+    ctx.stroke();
+    
+    // Label every tick
+    ctx.fillStyle = '#000';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.font = '10px sans-serif';
+    ctx.fillText(x.toFixed(2), px, canvas.height - DRAW_CONST.margin + tickSize + 2);
+  });
+  
+  // Y-axis ticks - define explicit values to avoid floating point issues
+  const yTicks = [];
+  for (let i = -5; i <= 5; i++) {
+    yTicks.push(i * 0.05);
   }
+  
+  // Draw each Y tick with label
+  yTicks.forEach(y => {
+    const py = mapY(y);
+    
+    // Draw tick mark
+    ctx.beginPath();
+    ctx.moveTo(DRAW_CONST.margin, py);
+    ctx.lineTo(DRAW_CONST.margin - tickSize, py);
+    ctx.stroke();
+    
+    // Label every tick
+    ctx.fillStyle = '#000';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    ctx.font = '10px sans-serif';
+    ctx.fillText(y.toFixed(2), DRAW_CONST.margin - tickSize - 2, py);
+  });
 }
 
-    /**
-     * Maps physical coordinates to plot coordinates
-     */
-    function physicalToPlot(x, y) {
-      const margin = DRAW_CONST.margin;
-      const px = p.map(
-        x,
-        DRAW_CONST.plotXMin,
-        DRAW_CONST.plotXMax,
-        margin,
-        p.width - margin
-      );
-      const py = p.map(
-        y,
-        DRAW_CONST.plotYMin,
-        DRAW_CONST.plotYMax,
-        p.height - margin,
-        margin
-      );
-      return { x: px, y: py };
+
+  // Main drawing function
+  function drawPlot() {
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Draw grid lines first (behind everything else)
+    drawGridAndTicks(ctx);
+
+    // Draw frame
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(
+      DRAW_CONST.margin, 
+      DRAW_CONST.margin, 
+      canvas.width - 2 * DRAW_CONST.margin, 
+      canvas.height - 2 * DRAW_CONST.margin
+    );
+    
+    // Draw data points
+    const results = model.getSimulationResults();
+    const graphicsParams = model.getGraphicsParams();
+    const dotSize = graphicsParams?.dotSize || 5;
+    
+    if (results && results.mollerPoints) {
+      // Draw Møller points
+      const {mollerPoints, mottPoints, xData, T0, T1} = results;
+      
+      mollerPoints.forEach((point, i) => {
+        const normVal = (xData[i] - T0) / (T1 - T0);
+        let color;
+        
+        if (normVal < 0.5) {
+          // Lerp between blue and black
+          const t = normVal * 2;
+          color = `rgb(${Math.round(t * DRAW_CONST.mollerColorB[0])}, 
+                       ${Math.round(t * DRAW_CONST.mollerColorB[1])}, 
+                       ${Math.round(DRAW_CONST.mollerColorA[2] * (1-t) + DRAW_CONST.mollerColorB[2] * t)})`;
+        } else {
+          // Lerp between black and red
+          const t = (normVal - 0.5) * 2;
+          color = `rgb(${Math.round(DRAW_CONST.mollerColorB[0] * (1-t) + DRAW_CONST.mollerColorC[0] * t)}, 
+                       ${Math.round(DRAW_CONST.mollerColorB[1] * (1-t))}, 
+                       ${Math.round(DRAW_CONST.mollerColorB[2] * (1-t))})`;
+        }
+        
+        const px = mapX(point.x);
+        const py = mapY(point.y);
+        
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(px, py, dotSize/2, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      
+      // Draw Mott points
+      ctx.fillStyle = `rgb(${DRAW_CONST.mottColor[0]}, ${DRAW_CONST.mottColor[1]}, ${DRAW_CONST.mottColor[2]})`;
+      
+      mottPoints.forEach(point => {
+        const px = mapX(point.x);
+        const py = mapY(point.y);
+        
+        ctx.beginPath();
+        ctx.arc(px, py, dotSize/2, 0, Math.PI * 2);
+        ctx.fill();
+      });
     }
-
-    function drawFrame() {
-      const margin = DRAW_CONST.margin;
-      const plotWidth = p.width - 2 * margin;
-      const plotHeight = p.height - 2 * margin;
-
-      // Draw frame
-      p.stroke(0);
-      p.noFill();
-      p.rect(margin, margin, plotWidth, plotHeight);
-      
-      // Draw labels
-      p.textAlign(p.CENTER);
-      p.fill(0);
-      p.text(DRAW_CONST.xLabel, p.width / 2, p.height - 10);
-      
-      p.push();
-      p.translate(10, p.height / 2);
-      p.rotate(-p.HALF_PI);
-      p.text(DRAW_CONST.yLabel, 0, 0);
-      p.pop();
-      
-      // Draw title with current z value
-      const physicsParams = model.getPhysicsParams();
-      p.textAlign(p.CENTER);
-      p.noStroke();
-      p.fill(0);
-      p.text(
-        DRAW_CONST.titlePrefix + p.nf(physicsParams.zVal, 1, 2),
-        p.width / 2,
-        margin - 10
-      );
-    }
-
-    function drawGrid() {
-      p.stroke(200);
-      p.strokeWeight(0.5);
-
-      // Horizontal grid lines
-      for (let i = 0; i <= DRAW_CONST.gridLines; i++) {
-        const y = p.map(
-          i / DRAW_CONST.gridLines, 
-          0, 1, 
-          DRAW_CONST.plotYMin, 
-          DRAW_CONST.plotYMax
-        );
-        const { x: px, y: py } = physicalToPlot(0, y);
-        
-        // Draw grid line
-        p.line(DRAW_CONST.margin, py, p.width - DRAW_CONST.margin, py);
-        
-        // Draw tick marks
-        p.line(DRAW_CONST.margin - DRAW_CONST.tickLength, py, DRAW_CONST.margin, py);
-        p.line(p.width - DRAW_CONST.margin, py, p.width - DRAW_CONST.margin + DRAW_CONST.tickLength, py);
-      }
-
-      // Vertical grid lines
-      for (let i = 0; i <= DRAW_CONST.gridLines; i++) {
-        const x = p.map(
-          i / DRAW_CONST.gridLines, 
-          0, 1, 
-          DRAW_CONST.plotXMin, 
-          DRAW_CONST.plotXMax
-        );
-        const { x: px, y: py } = physicalToPlot(x, 0);
-        
-        // Draw grid line
-        p.line(px, DRAW_CONST.margin, px, p.height - DRAW_CONST.margin);
-        
-        // Draw tick marks
-        p.line(px, p.height - DRAW_CONST.margin, px, p.height - DRAW_CONST.margin + DRAW_CONST.tickLength);
-        p.line(px, DRAW_CONST.margin, px, DRAW_CONST.margin - DRAW_CONST.tickLength);
-      }
-    }
-
-    function drawAxisLabels() {
-      // X-axis labels
-      p.textSize(DRAW_CONST.tickLabelSize);
-      p.fill(0);
-      p.textAlign(p.CENTER, p.TOP);
-      
-      for (let i = 0; i <= DRAW_CONST.xTicks; i++) {
-        const x = p.map(i / DRAW_CONST.xTicks, 0, 1, DRAW_CONST.plotXMin, DRAW_CONST.plotXMax);
-        const { x: px } = physicalToPlot(x, 0);
-        
-        p.noStroke();
-        p.text(p.nf(x, 1, 2), px, p.height - DRAW_CONST.margin + DRAW_CONST.tickLabelOffset);
-      }
-      
-      // Y-axis labels
-      p.textAlign(p.RIGHT, p.CENTER);
-      
-      for (let i = 0; i <= DRAW_CONST.yTicks; i++) {
-        const y = p.map(i / DRAW_CONST.yTicks, 0, 1, DRAW_CONST.plotYMin, DRAW_CONST.plotYMax);
-        const { y: py } = physicalToPlot(0, y);
-        
-        p.noStroke();
-        p.text(p.nf(y, 1, 2), DRAW_CONST.margin - DRAW_CONST.tickLabelOffset, py);
-      }
-    }
-
-    function drawDetector() {
-      // Get detector parameters from measurement params
-      const measurementParams = model.getMeasurementParams();
-      
-      // Safety check - return if parameters are missing
-      if (!measurementParams) return;
-      
+    
+    // Draw detector
+    const measurementParams = model.getMeasurementParams();
+    if (measurementParams) {
       const detectorWidth = measurementParams.detector_width || 0.02;
       const detectorHeight = measurementParams.detector_height || 0.02;
       const detectorCenterX = measurementParams.detector_center_x || 0;
-      const detectorCenterY = 0; // Fixed at y=0
       
-      // Calculate detector corners in physical coordinates
-      const topLeft = physicalToPlot(
-        detectorCenterX - detectorWidth / 2,
-        detectorCenterY + detectorHeight / 2
-      );
+      const x1 = mapX(detectorCenterX - detectorWidth/2);
+      const y1 = mapY(detectorHeight/2);
+      const x2 = mapX(detectorCenterX + detectorWidth/2);
+      const y2 = mapY(-detectorHeight/2);
       
-      const bottomRight = physicalToPlot(
-        detectorCenterX + detectorWidth / 2,
-        detectorCenterY - detectorHeight / 2
-      );
+      ctx.fillStyle = `rgba(${DRAW_CONST.detectorFill[0]}, ${DRAW_CONST.detectorFill[1]}, 
+                            ${DRAW_CONST.detectorFill[2]}, ${DRAW_CONST.detectorFill[3]})`;
+      ctx.strokeStyle = `rgb(${DRAW_CONST.detectorColor[0]}, ${DRAW_CONST.detectorColor[1]}, 
+                             ${DRAW_CONST.detectorColor[2]})`;
+      ctx.lineWidth = 3;
       
-      // Draw detector
-      p.fill(...DRAW_CONST.detectorFill);
-      p.stroke(...DRAW_CONST.detectorColor);
-      p.strokeWeight(3);
-      p.rect(
-        topLeft.x,
-        topLeft.y,
-        bottomRight.x - topLeft.x,
-        bottomRight.y - topLeft.y
-      );
-      
-      // Reset styles
-      p.strokeWeight(1);
-      p.noFill();
+      ctx.fillRect(x1, y1, x2-x1, y2-y1);
+      ctx.strokeRect(x1, y1, x2-x1, y2-y1);
     }
-
-    function drawPoints() {
-      const graphicsParams = model.getGraphicsParams();
-      const simulationResults = model.getSimulationResults();
-      
-      // Safety check - return if results are missing
-      if (!simulationResults || !simulationResults.mollerPoints) {
-        return;
-      }
-      
-      const { mollerPoints, mottPoints, xData, T0, T1 } = simulationResults;
-      const dotSize = graphicsParams?.dotSize || 5;
-      
-      // Draw Møller points with gradient coloring
-      const blueCol = p.color(...DRAW_CONST.mollerColorA);
-      const blackCol = p.color(...DRAW_CONST.mollerColorB);
-      const redCol = p.color(...DRAW_CONST.mollerColorC);
-      
-      p.noStroke();
-      
-      for (let i = 0; i < mollerPoints.length; i++) {
-        // Normalize T value for color gradient
-        const normVal = p.map(xData[i], T0, T1, 0, 1);
-        const col = normVal < 0.5
-          ? p.lerpColor(blueCol, blackCol, normVal * 2)
-          : p.lerpColor(blackCol, redCol, (normVal - 0.5) * 2);
-        
-        const { x: px, y: py } = physicalToPlot(
-          mollerPoints[i].x, 
-          mollerPoints[i].y
-        );
-        
-        p.fill(col);
-        p.ellipse(px, py, dotSize, dotSize);
-      }
-      
-      // Draw Mott points
-      p.fill(p.color(...DRAW_CONST.mottColor));
-      
-      for (const point of mottPoints) {
-        const { x: px, y: py } = physicalToPlot(point.x, point.y);
-        p.ellipse(px, py, dotSize, dotSize);
-      }
+  }
+  
+  // Handle window resize
+  window.addEventListener('resize', resizeCanvas);
+  
+  // Create observer to update the plot when model changes
+  const observer = {
+    update: () => {
+      drawPlot();
     }
-
-    p.draw = () => {
-      p.background(240);
-      
-      // Draw the plot components in order
-      drawFrame();
-      drawGrid();
-      drawAxisLabels();
-      drawDetector();
-      drawPoints();
-    };
-
-    // Create observer to update the plot when model changes
-    const observer = {
-      update: () => {
-        p.redraw();
-      }
-    };
-    
-    // Register the observer with the model
-    model.addObserver(observer);
   };
-
-  // Start the p5 sketch
-  new p5(sketch);
-}
-
-/**
- * Sets up the p5 plot in the canvasContainer
- * @param {object} model - The application model
- */
-export function setupPlot(model) {
-  setupCanvas(model);
+  
+  // Register the observer with the model
+  model.addObserver(observer);
+  
+  // Initial setup
+  resizeCanvas();
+  return { redraw: drawPlot };
 }

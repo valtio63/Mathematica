@@ -83,6 +83,10 @@ export class Slider {
     const newValue = this.#onUpdateRead(this.#model);
     this.#input.value = newValue;
     this.#valueSpan.textContent = newValue.toFixed(2);
+    // Reset suppressEvents after DOM operations are complete
+    setTimeout(() => {
+      this.#suppressEvents = false;
+    }, 0);
   }
 }
 
@@ -268,6 +272,11 @@ export class Checkbox {
     this.#suppressEvents = true;
     const checked = !!this.#onUpdateRead(this.#model);
     this.#input.checked = checked;
+
+    // Reset suppressEvents after DOM operations are complete
+    setTimeout(() => {
+      this.#suppressEvents = false;
+    }, 0);
   }
 }
 

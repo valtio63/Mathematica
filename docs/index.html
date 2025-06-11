@@ -37,8 +37,8 @@
     }
     #canvasContainer {
       width: 100%;
-      max-width: 1200px;
-      aspect-ratio: 2 / 1;
+      max-width: 1500px;
+      aspect-ratio: 12 / 5;
       background: #eee;
     }
     /* Controls row: three columns */
@@ -190,64 +190,62 @@
       outline: none;
       box-shadow: 0 0 0 3px rgba(193,0,42,0.25);
     }
-    /* QR code */
-    .qr p {
-      margin: 0 0 8px 0;
-      font-weight: bold;
-      color: var(--jgu-gray);
-    }
-    .qr img {
-      width: 100%;
-      max-width: 400px;
-      border-radius: 4px;
-      border: 1px solid #eee;
-      background: #fafafa;
-    }
-    /* Responsive: stack controls vertically on narrow screens */
-    @media (max-width: 900px) {
-      .controls-row {
-        flex-direction: column;
-        gap: 18px;
-        padding: 12px 0 0 0;
-      }
-      .controls-left, .controls-mid, .container-right {
-        max-width: 100%;
-        min-width: 0;
-      }
-    }
+
+    .page-content {
+  display: flex;
+  width: 100%;
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+.controls-row {
+  flex: 1;
+  display: flex;
+  gap: 24px;
+  margin-right: 24px;
+}
+
+.qr {
+  width: 300px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 24px;
+  align-self: flex-start;
+}
+
+#qrCode {
+  width: 100%;
+}
   </style>
-  <!-- Include p5.js from CDN -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.2/p5.min.js"></script>
 </head>
 <body>
   <div class="container">
     <div class="plot">
-      <!-- p5.js will attach the canvas here -->
       <div id="canvasContainer"></div>
     </div>
-    <div class="controls-row">
-    <div class="controls-left">
-      <div class="sliders" id="physicsSliders">
+    
+    <!-- Just wrap these two elements in page-content -->
+    <div class="page-content">
+      <div class="controls-row">
+        <div class="controls-left">
+          <div class="sliders" id="physicsSliders"></div>
+          <div class="checkboxes" id="physicsCheckboxes"></div>
+        </div>
+        <div class="controls-mid">
+          <div class="sliders" id="graphicsSliders"></div>
+          <div class="counters" id="measurementCounters"></div>
+          <div class="sliders" id="measurementSliders"></div>
+        </div>
+        <div class="controls-right">
+          <div class="buttons"></div>
+        </div>
       </div>
-      <div class="checkboxes" id="physicsCheckboxes">
-      </div>
-    </div>
-    <div class="controls-mid">
-      <div class="sliders" id="graphicsSliders">
-      </div>
-      <div class="counters" id="measurementCounters">
-      </div>
-      <div class="sliders" id="measurementSliders">
-      </div>
-    </div>
-    <div class="controls-right">
-      <div class="buttons">
-      </div>
+      
+      <!-- Simplified QR section -->
       <div class="qr">
         <p>QR Code:</p>
         <img id="qrCode" src="./qr-code.png" alt="QR Code">
       </div>
-    </div>
     </div>
   </div>
   <script type="module" src="./mollerMain.mjs"></script>
