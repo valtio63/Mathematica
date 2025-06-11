@@ -190,17 +190,32 @@ export function mollerPhaseSpaceData(params) {
     const electronInitialConds =
       mollerInitialConditions(155.0, T1);
 
-    const md = driftMatrix(params.Lc1);
+    // Matrix describing the drift between quadrupole and detector
+    const mat_drift_quad_det = driftMatrix(params.drift_quad_det);
+
+    // Matrix describing the drift between solenoid and quadrupole
+    const mat_drift_sol_quad = driftMatrix(params.drift_sol_quad);
 
     let sharedCorrectionAngle;
 
     for (let initCond of electronInitialConds) {
-      const ms = solenoidMatrix(params.Bs, 0.40607 * params.zVal, initCond.T);
-      const quadrupoleMatrix = quadMatrix(params.grad, QUAD_LENGTH, initCond.T);
-      const vec = multiplyVectorWithAll(md, quadrupoleMatrix, md, md, ms, initCond.vec);
+      const mat_sol = solenoidMatrix(params.Bs, 0.40607 * params.zVal, initCond.T);
+      const mat_quad = quadMatrix(params.grad, QUAD_LENGTH, initCond.T);
+      const vec = multiplyVectorWithAll(
+        mat_drift_quad_det,
+        mat_quad,
+        mat_drift_sol_quad,
+        mat_sol, 
+        initCond.vec
+      );
 
       const x = vec[0];
       const y = vec[2];
+
+      // The `for (let initCond ...)` iterates over the
+      // two collided electrons returned by `mollerInitialConds`,
+      // we use the first one to determine the correction angle,
+      // and then reuse it in the second iteration.
       if (sharedCorrectionAngle === undefined) {  
         sharedCorrectionAngle = Math.atan2(y, x);
       }

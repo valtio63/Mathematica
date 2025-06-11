@@ -48,12 +48,19 @@ const physicsParamsSliderSettings = {
     label: "grad_q [T/m]",
     id: "grad"
   },
-  Lc1: {
+  drift_quad_det: {
     min: 0,
     max: 2,
     step: 0.01,
-    label: "Drift L [m]",
-    id: "Lc1"
+    label: "Drift Quad-Detector [m]",
+    id: "drift_quad_det"
+  },
+  drift_sol_quad: {
+    min: 0,
+    max: 2,
+    step: 0.01,
+    label: "Drift Solenoid-Quad [m]",
+    id: "drift_sol_quad"
   },
   centerT: {
     min: 10.0,
@@ -76,8 +83,8 @@ const measurementSliderSettings = {
     min: -0.75,
     max: 0.75,
     step: 0.01,
-    label: "Detector Offset",
-    id: "detector_center_y"
+    label: "Detector x-Offset",
+    id: "detector_center_x"
   },
   detector_width: {
     min: 0.01,
@@ -118,6 +125,11 @@ const buttons = [
     title: "Reset centerT = 155.0 / 2",
     settings: { physicsParams: { centerT: (155.0 / 2) } }
   },
+  {
+    title: "Reset drift sol-quad = 0.5",
+    settings: { physicsParams: { drift_sol_quad: 0.5 } }
+  },
+
   {
     title: "ΔT1 = 0.1",
     settings: {
