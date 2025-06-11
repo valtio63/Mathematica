@@ -10,7 +10,8 @@ export function Model() {
     zVal: 1,
     Bs: 8.0,
     grad: -1.7,
-    Lc1: 0.75,
+    drift_quad_det: 0.75,
+    drift_sol_quad: 0.5,
     centerT: 77.5,
     normalizationOn: false
   };
