@@ -5,166 +5,246 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Phase Space Visualization</title>
   <style>
+    :root {
+      --jgu-red: #c1002a;
+      --jgu-gray: #636363;
+      --button-hover: #e09163;
+      --white: #fff;
+      --black: #000;
+    }
     body {
       font-family: sans-serif;
       margin: 0;
       padding: 0;
+      background: var(--white);
+      color: var(--black);
     }
-    /* Container for the plot and control areas */
     .container {
       display: flex;
-      flex-direction: row;
+      flex-direction: column;
       min-height: 100vh;
+      width: 100vw;
     }
-    /* Left: plot */
+    /* Canvas on top, full width */
     .plot {
-      flex: 1;
+      width: 100%;
       display: flex;
       justify-content: center;
       align-items: center;
+      background: #f5f5f5;
+      padding: 0;
+      margin: 0;
     }
-    /* Right: control sections for sliders and buttons */
-    .controls {
-      width: 300px;
-      padding: 20px;
+    #canvasContainer {
+      width: 100%;
+      max-width: 1500px;
+      aspect-ratio: 12 / 5;
+      background: #eee;
+    }
+    /* Controls row: three columns */
+    .controls-row {
+      display: flex;
+      flex-direction: row;
+      width: 100%;
+      gap: 24px;
+      padding: 24px 0 0 0;
       box-sizing: border-box;
-      background-color: #f9f9f9;
+      background: var(--white);
+    }
+    .controls-left, .controls-mid {
+      flex: 1.2 1 0;
+      min-width: 220px;
+      max-width: 400px;
       display: flex;
       flex-direction: column;
-      gap: 20px;
+      gap: 18px;
     }
-    /* Sliders and buttons containers */
-    .sliders, .buttons, .qr {
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      padding: 10px;
-      background-color: #fff;
+    .container-right {
+      flex: 0.8 1 0;
+      min-width: 180px;
+      max-width: 260px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
     }
+    /* Card style for controls */
+    .sliders, .buttons, .qr, .checkboxes, .counters {
+      border: 1px solid var(--jgu-gray);
+      border-radius: 7px;
+      padding: 14px 12px;
+      background: var(--white);
+      margin-bottom: 0;
+    }
+    /* Sliders */
     .slider-container {
-      margin-bottom: 10px;
+      margin-bottom: 14px;
     }
     .slider-container:last-child {
       margin-bottom: 0;
     }
     label {
       display: block;
-      font-size: 0.9em;
+      font-size: 1em;
       margin-bottom: 4px;
+      color: var(--black);
+      font-weight: 500;
     }
     input[type=range] {
       width: 100%;
+      accent-color: var(--jgu-red);
+      height: 4px;
+      background: linear-gradient(90deg, var(--jgu-red) 0%, var(--jgu-gray) 100%);
+      border-radius: 2px;
+      outline: none;
+      margin: 0;
+      /* Remove default styling for Chrome */
+      -webkit-appearance: none;
     }
-    canvas {
-      background: #eee;
-      max-width: 100%;
-      height: auto;
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--jgu-red);
+      border: 2px solid var(--jgu-gray);
+      cursor: pointer;
+      box-shadow: 0 0 2px var(--jgu-gray);
+      transition: background 0.2s;
     }
-    #canvasContainer {
-      width: 100%;
-      /* Modern browsers support the aspect-ratio property */
-      aspect-ratio: 1 / 1;
+    input[type=range]:focus::-webkit-slider-thumb {
+      background: var(--jgu-gray);
+      border: 2px solid var(--jgu-red);
     }
-    /* Responsive: stack vertically on narrow screens */
-    @media (max-width: 800px) {
-      .container {
-        flex-direction: column;
-      }
-      .controls {
-        width: 100%;
-      }
+    input[type=range]::-moz-range-thumb {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--jgu-red);
+      border: 2px solid var(--jgu-gray);
+      cursor: pointer;
+      box-shadow: 0 0 2px var(--jgu-gray);
+      transition: background 0.2s;
     }
-    
+    input[type=range]:focus::-moz-range-thumb {
+      background: var(--jgu-gray);
+      border: 2px solid var(--jgu-red);
+    }
+    input[type=range]::-ms-thumb {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--jgu-red);
+      border: 2px solid var(--jgu-gray);
+      cursor: pointer;
+      box-shadow: 0 0 2px var(--jgu-gray);
+      transition: background 0.2s;
+    }
+    input[type=range]:focus::-ms-thumb {
+      background: var(--jgu-gray);
+      border: 2px solid var(--jgu-red);
+    }
+    /* Remove default track styles */
+    input[type=range]::-webkit-slider-runnable-track {
+      height: 4px;
+      border-radius: 2px;
+      background: linear-gradient(90deg, var(--jgu-red) 0%, var(--jgu-gray) 100%);
+    }
+    input[type=range]::-ms-fill-lower {
+      background: var(--jgu-red);
+    }
+    input[type=range]::-ms-fill-upper {
+      background: var(--jgu-gray);
+    }
+    input[type=range]:focus {
+      outline: none;
+      box-shadow: 0 0 0 2px var(--jgu-red);
+    }
+    /* Buttons */
     .buttons button {
       display: block;
       width: 85%;
-      margin: 10px auto; /* 10px vertical space and centered */
-      padding: 10px 15px;
-      background-color: #3d3653;
-      color: #ffffff;
+      margin: 12px auto;
+      padding: 12px 18px;
+      background-color: var(--jgu-red);
+      color: var(--white);
       border: none;
       border-radius: 8px;
       font-size: 1em;
       font-weight: bold;
       cursor: pointer;
-      transition: background-color 0.2s ease, transform 0.1s ease;
+      transition: background-color 0.2s, transform 0.1s;
+      box-shadow: 0 2px 8px rgba(99,0,42,0.08);
+      letter-spacing: 0.02em;
     }
-
     .buttons .partial {
       width: 65%;
-      background-color: #832604;
+      background-color: var(--jgu-gray);
+      color: var(--white);
     }
-    
     .buttons button:hover {
-      background-color: #e09163;
-      transform: scale(1.02);
+      background-color: #e74a6a;
+      transform: scale(1.03);
     }
-    
     .buttons button:focus {
       outline: none;
-      box-shadow: 0 0 0 3px rgba(30, 4, 71, 0.4);
+      box-shadow: 0 0 0 3px rgba(193,0,42,0.25);
     }
+
+    .page-content {
+  display: flex;
+  width: 100%;
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+.controls-row {
+  flex: 1;
+  display: flex;
+  gap: 24px;
+  margin-right: 24px;
+}
+
+.qr {
+  width: 300px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 24px;
+  align-self: flex-start;
+}
+
+#qrCode {
+  width: 100%;
+}
   </style>
-  <!-- Include p5.js from CDN -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.2/p5.min.js"></script>
 </head>
 <body>
   <div class="container">
     <div class="plot">
-      <!-- p5.js will attach the canvas here -->
       <div id="canvasContainer"></div>
     </div>
-    <div class="controls">
-      <div class="checkboxes">
-        <div class="checkbox-container">
-          <input type="checkbox" id="normalizationOn" checked>
-          <label for="normalizationOn">Normalization On</label>
+    
+    <!-- Just wrap these two elements in page-content -->
+    <div class="page-content">
+      <div class="controls-row">
+        <div class="controls-left">
+          <div class="sliders" id="physicsSliders"></div>
+          <div class="checkboxes" id="physicsCheckboxes"></div>
+        </div>
+        <div class="controls-mid">
+          <div class="sliders" id="graphicsSliders"></div>
+          <div class="counters" id="measurementCounters"></div>
+          <div class="sliders" id="measurementSliders"></div>
+        </div>
+        <div class="controls-right">
+          <div class="buttons"></div>
         </div>
       </div>
-      <div class="sliders">
-        <div class="slider-container">
-          <label for="deltaT1">ΔT1: <span id="deltaT1Value">10</span></label>
-          <input type="range" id="deltaT1" min="0.1" max="77" step="0.1" value="10">
-        </div>
-        <div class="slider-container">
-          <label for="zVal">z Scale: <span id="zValValue">1</span></label>
-          <input type="range" id="zVal" min="0" max="1" step="0.01" value="1">
-        </div>
-        <div class="slider-container">
-          <label for="Bs">Bₛ [T]: <span id="BsValue">8.0</span></label>
-          <input type="range" id="Bs" min="0.01" max="9" step="0.1" value="8.0">
-        </div>
-        <div class="slider-container">
-          <label for="grad">grad_q [T/m]: <span id="gradValue">1.7</span></label>
-          <input type="range" id="grad" min="0.001" max="2.5" step="0.01" value="1.7">
-        </div>
-        <div class="slider-container">
-          <label for="Lc1">Drift L [m]: <span id="Lc1Value">0.75</span></label>
-          <input type="range" id="Lc1" min="0" max="2" step="0.01" value="0.75">
-        </div>
-        <div class="slider-container">
-          <label for="centerT">centerT: <span id="centerTValue">77.5</span></label>
-          <input type="range" id="centerT" min="10.0" max="145.0" step="1.0" value="77.5">
-        </div>
-        <div class="counter">
-          <p>Mott Hits:<span id="detector_hits_count_mott">0</span></p>
-          <p>Moller Hits:<span id="detector_hits_count_moller">0</span></p>
-        </div>
-        <div class="slider-container">
-          <label for="detector_center_y">Detector Y:<span id="detector_center_yValue">0.2</span></label>
-          <input type="range" id="detector_center_y" min="0.01" max="0.5" step="0.01" value="0.2">
-        </div>
-      </div>
-      <div class="sliders">
-        <div class="slider-container">
-          <label for="dotSize">Dot Size: <span id="dotSizeValue">5</span></label>
-          <input type="range" id="dotSize" min="1" max="15" step="1" value="5">
-        </div>
-      </div>
-      <div class="buttons">
-      </div>
+      
+      <!-- Simplified QR section -->
       <div class="qr">
         <p>QR Code:</p>
-        <img id="qrCode" src="./qr-code.png" alt="QR Code" style="width: 100%">
+        <img id="qrCode" src="./qr-code.png" alt="QR Code">
       </div>
     </div>
   </div>

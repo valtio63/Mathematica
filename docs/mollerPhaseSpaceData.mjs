@@ -8,11 +8,6 @@ export function magneticRigidity(T) {
   return ((T + electronMass) * 1e6) / speedOfLight;
 }
 
-/**
- * @param intermediateResults optional object that can be used to collect
- *                            some of the intermediate results that are
- *                            not exposed otherwise. For testing only.
- */
 export function mollerInitialConditions(T0, T1) {
   const E0 = T0 + electronMass;
   const E1 = T1 + electronMass;
@@ -49,45 +44,15 @@ export function mollerInitialConditions(T0, T1) {
   ];
 }
 
-export function detectorHitPredicate(params) {
-  if (params.detector_geometry === 'circle') {
-    const radius = DETECTOR_DIAM / 2;
-    const rSquare = radius * radius;
-    return point2d => {
-      const yDist = point2d.y - params.detector_center_y;
-      return (point2d.x * point2d.x + yDist * yDist) <= rSquare;
-    };
-  } else {
-    const halfSize = DETECTOR_DIAM / 2;
-    return point2d => {
-      const xDist = Math.abs(point2d.x);
-      const yDist = Math.abs(point2d.y - params.detector_center_y);
-      return xDist <= halfSize && yDist <= halfSize;
-    };
-  }
-}
-
-/** Counts number of array elements satisfying the predicate. */
-function count(arr, pred) {
-  let res = 0;
-  for (const x of arr) {
-    if (pred(x)) {
-      res++;
+function eye(dim) {
+  const result = [];
+  for (let i = 0; i < dim; i++) {
+    result[i] = [];
+    for (let j = 0; j < dim; j++) {
+      result[i][j] = (i === j) ? 1 : 0;
     }
   }
-  return res;
-}
-
-/**
- * Takes the data of all points in the plane, extracts only
- * the hits that land on the detector geometry.
- */
-export function countDetectorHits(params, mott, moller) {
-  const hitPredicate = detectorHitPredicate(params);
-  const mottHits = count(mott, hitPredicate);
-  const mollerHits = count(moller, hitPredicate);
-
-  return { mottHits, mollerHits };
+  return result;
 }
 
 export function mollerPhaseSpaceData(params) {
@@ -124,7 +89,7 @@ export function mollerPhaseSpaceData(params) {
 
   function quadMatrix(grad, lq, t) {
     const k = grad / magneticRigidity(t);
-    if (k === 0) return math.identity(4)._data;
+    if (k === 0) return eye(4);
   
     let mx, my;
     if (k > 0) {
@@ -185,16 +150,7 @@ export function mollerPhaseSpaceData(params) {
     return result;
   }
 
-  function eye(dim) {
-    const result = [];
-    for (let i = 0; i < dim; i++) {
-      result[i] = [];
-      for (let j = 0; j < dim; j++) {
-        result[i][j] = (i === j) ? 1 : 0;
-      }
-    }
-    return result;
-  }
+
 
   function multiplyMatrices(...matrices) {
     if (matrices.length === 0) {
@@ -226,7 +182,7 @@ export function mollerPhaseSpaceData(params) {
   const centerT = params.centerT;
   const Tmin = centerT - params.deltaT1;
   const Tmax = centerT + params.deltaT1;
-  const steps = 12550;
+  const steps = params.numParticles;;
 
   // Compute Møller points.
   for (let i = 0; i <= steps; i++) {
@@ -271,15 +227,9 @@ export function mollerPhaseSpaceData(params) {
     mottPoints.push({ x: vec[0], y: vec[2] });
   }
 
-  const { mottHits, mollerHits } = countDetectorHits(params, mottPoints, mollerPoints);
-
-  console.log("Counts: ", mottHits, mollerHits)
-
   return {
     mollerPoints,
     mottPoints,
-    mollerHits,
-    mottHits,
     xData,
     T0: Tmin,
     T1: Tmax
